@@ -9,9 +9,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"mysql+mysqlconnector://{os.environ.get('DB_PW')}@localhost/mechanic_db"
+    f"mysql+mysqlconnector://root:{os.getenv('DB_PW')}@localhost/mechanic_db"
 )
+
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
@@ -23,7 +26,7 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class=Base)  # Instantiate your SQLAlchemy database
 db.init_app(app)  # adding our db extension to our app
 
-
+# Define association table BEFORE models
 service_mechanics = db.Table(
     "service_mechanics",
     Base.metadata,
@@ -76,6 +79,11 @@ class Mechanic(Base):
 
 with app.app_context():
     db.create_all()
+
+
+@app.route("/members", methods=["GET"])
+def get_members():
+    return {"message": "Members endpoint is working!"}
 
 
 app.run()

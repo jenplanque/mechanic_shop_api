@@ -1,8 +1,11 @@
 from datetime import date
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from typing import List  ### New import
+from typing import List
+from flask_marshmallow import Marshmallow
+from marshmallow import ValidationError
+from sqlalchemy import select
 import os
 from dotenv import load_dotenv
 
@@ -24,7 +27,10 @@ class Base(DeclarativeBase):
 
 
 db = SQLAlchemy(model_class=Base)  # Instantiate your SQLAlchemy database
+ma = Marshmallow()  # Instantiate Marshmallow for serialization
+
 db.init_app(app)  # adding our db extension to our app
+ma.init_app(app)  # adding our marshmallow extension to our app
 
 # Define association table BEFORE models
 service_mechanics = db.Table(
@@ -43,12 +49,12 @@ class Customer(Base):
     email: Mapped[str] = mapped_column(db.String(250), nullable=False, unique=True)
     phone: Mapped[str] = mapped_column(db.String(15), nullable=False)
 
-    service_tickets: Mapped[List["Service_Ticket"]] = db.relationship(
+    service_tickets: Mapped[List["ServiceTickets"]] = db.relationship(
         back_populates="customer"
     )
 
 
-class Service_Ticket(Base):
+class ServiceTickets(Base):
     __tablename__ = "service_tickets"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -72,18 +78,71 @@ class Mechanic(Base):
     phone: Mapped[str] = mapped_column(db.String(15), nullable=False)
     salary: Mapped[float] = mapped_column(db.Float, nullable=False)
 
-    service_tickets: Mapped[List["Service_Ticket"]] = db.relationship(
+    service_tickets: Mapped[List["ServiceTickets"]] = db.relationship(
         secondary=service_mechanics, back_populates="mechanics"
     )
+
+
+# -------SCHEMAS-------#
+class CustomerSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Customer
+        # load_instance = True
+
+
+customer_schema = CustomerSchema()
+customers_schema = CustomerSchema(many=True)
+
+
+# ------ROUTES-------#
+
+
+# ADD CUSTOMER and GET ALL CUSTOMERS
+@app.route("/customers", methods=["POST", "GET"])
+def customers():
+    if request.method == "POST":
+        try:
+            customer_data = customer_schema.load(request.json)
+
+        except ValidationError as e:
+            return jsonify(e.messages), 400
+
+        query = select(Customer).where(Customer.email == customer_data["email"])
+        existing_customer = db.session.execute(query).scalars().all()
+        if existing_customer:
+            return jsonify({"error": "Email already exists"}), 400
+
+        new_customer = Customer(**customer_data)
+        db.session.add(new_customer)
+        db.session.commit()
+        return customer_schema.jsonify(new_customer), 201
+
+    elif request.method == "GET":
+        query = select(Customer)
+        customers = db.session.execute(query).scalars().all()
+
+        return customers_schema.jsonify(customers), 200
+
+
+# GET SPECIFIC CUSTOMER
+@app.route("/customers/<int:customer_id>", methods=["GET"])
+def get_customer(customer_id):
+    customer = db.session.get(Customer, customer_id)
+
+    if customer:
+        return customer_schema.jsonify(customer), 200
+    return jsonify({"error": "Customer not found."}), 404
+
+
+# use below to test the connection
+# @app.route("/members", methods=["GET"])
+# def get_members():
+#     return {"message": "Members endpoint is working!"}
 
 
 with app.app_context():
     db.create_all()
 
 
-@app.route("/members", methods=["GET"])
-def get_members():
-    return {"message": "Members endpoint is working!"}
-
-
-app.run()
+if __name__ == "__main__":
+    app.run()

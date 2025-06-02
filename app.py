@@ -134,6 +134,49 @@ def get_customer(customer_id):
     return jsonify({"error": "Customer not found."}), 404
 
 
+# UPDATE CUSTOMER
+@app.route("/customers/<int:customer_id>", methods=["PUT"])
+def update_customer(customer_id):
+    customer = db.session.get(Customer, customer_id)
+
+    if not customer:
+        return jsonify({"error": "Customer not found."}), 404
+
+    try:
+        customer_data = customer_schema.load(request.json)
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+
+    # if new email, verify does not already exist in DB
+    if customer_data.get("email") != customer.email:
+        query = select(Customer).where(Customer.email == customer_data["email"])
+        existing_customer = db.session.execute(query).scalars().first()
+        if existing_customer:
+            return jsonify({"error": "Email already exists"}), 400
+
+    for key, value in customer_data.items():
+        setattr(customer, key, value)
+
+    db.session.commit()
+    return customer_schema.jsonify(customer), 200
+
+
+# DELETE CUSTOMER
+@app.route("/customers/<int:customer_id>", methods=["DELETE"])
+def delete_customer(customer_id):
+    customer = db.session.get(Customer, customer_id)
+
+    if not customer:
+        return jsonify({"error": "Customer not found."}), 404
+
+    db.session.delete(customer)
+    db.session.commit()
+    return (
+        jsonify({"message": f"Customer id: {customer_id} deleted successfully."}),
+        200,
+    )
+
+
 # use below to test the connection
 # @app.route("/members", methods=["GET"])
 # def get_members():

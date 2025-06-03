@@ -3,3 +3,4 @@
 /settings
 /archives
 .env
+app/blueprints/customers/__pycache__

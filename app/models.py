@@ -13,8 +13,6 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)  # Instantiate your SQLAlchemy database
 
-# db.init_app(app)  # adding our db extension to our app
-# ma.init_app(app)  # adding our marshmallow extension to our app
 
 # Define association table BEFORE models
 service_mechanics = db.Table(
@@ -38,7 +36,7 @@ class Customer(Base):
     )
 
 
-class ServiceTickets(Base):
+class ServiceTicket(Base):
     __tablename__ = "service_tickets"
 
     id: Mapped[int] = mapped_column(primary_key=True)

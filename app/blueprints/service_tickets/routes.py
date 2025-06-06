@@ -1,86 +1,92 @@
-from .schemas import customer_schema, customers_schema
+from .schemas import service_ticket_schema, service_tickets_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
-from app.models import db, Customer
-from . import customers_bp
+from app.models import db, ServiceTicket, Customer, Mechanic
+
+from . import service_tickets_bp
 
 
-# ADD CUSTOMER and GET ALL CUSTOMERS
-@customers_bp.route("/", methods=["POST", "GET"])
-def customers():
+# ADD SERVICE TICKET and GET ALL SERVICE TICKETS
+@service_tickets_bp.route("/", methods=["POST", "GET"])
+def service_tickets():
     if request.method == "POST":
         try:
-            customer_data = customer_schema.load(request.json)
+            service_ticket_data = service_ticket_schema.load(request.json)
 
         except ValidationError as e:
             return jsonify(e.messages), 400
 
-        query = select(Customer).where(Customer.email == customer_data["email"])
-        existing_customer = db.session.execute(query).scalars().all()
-        if existing_customer:
-            return jsonify({"error": "Email already exists"}), 400
+        query = select(ServiceTicket).where(ServiceTicket.VIN == service_ticket_data["VIN"])
+        existing_service_ticket = db.session.execute(query).scalars().all()
+        if existing_service_ticket:
+            return jsonify({"error": "Service Ticket with this VIN already exists"}), 400
 
-        new_customer = Customer(**customer_data)
-        db.session.add(new_customer)
+        # Verify that the customer_id exists in the Customer table before proceeding
+        customer_id = service_ticket_data.get("customer_id")
+        if not customer_id or not db.session.get(Customer, customer_id):
+            return jsonify({"error": "Customer not found."}), 404
+
+        new_service_ticket = ServiceTicket(**service_ticket_data)
+        db.session.add(new_service_ticket)
         db.session.commit()
-        return customer_schema.jsonify(new_customer), 201
+        return service_ticket_schema.jsonify(new_service_ticket), 201
 
     elif request.method == "GET":
-        query = select(Customer)
-        customers = db.session.execute(query).scalars().all()
+        query = select(ServiceTicket)
+        service_tickets = db.session.execute(query).scalars().all()
 
-        return customers_schema.jsonify(customers), 200
-
-
-# GET SPECIFIC CUSTOMER
-@customers_bp.route("/<int:customer_id>", methods=["GET"])
-def get_customer(customer_id):
-    customer = db.session.get(Customer, customer_id)
-
-    if customer:
-        return customer_schema.jsonify(customer), 200
-    return jsonify({"error": "Customer not found."}), 404
+        return service_tickets_schema.jsonify(service_tickets), 200
 
 
-# UPDATE CUSTOMER
-@customers_bp.route("/<int:customer_id>", methods=["PUT"])
-def update_customer(customer_id):
-    customer = db.session.get(Customer, customer_id)
+# GET SPECIFIC SERVICE TICKET
+@service_tickets_bp.route("/<int:service_ticket_id>", methods=["GET"])
+def get_service_ticket(service_ticket_id):
+    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
 
-    if not customer:
-        return jsonify({"error": "Customer not found."}), 404
+    if service_ticket:
+        return service_ticket_schema.jsonify(service_ticket), 200
+    return jsonify({"error": "Service Ticket not found."}), 404
+
+
+# UPDATE SERVICE TICKET
+@service_tickets_bp.route("/<int:service_ticket_id>", methods=["PUT"])
+def update_service_ticket(service_ticket_id):
+    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
+
+    if not service_ticket:
+        return jsonify({"error": "Service Ticket not found."}), 404
 
     try:
-        customer_data = customer_schema.load(request.json)
+        service_ticket_data = service_ticket_schema.load(request.json)
     except ValidationError as e:
         return jsonify(e.messages), 400
 
-    # if new email, verify does not already exist in DB
-    if customer_data.get("email") != customer.email:
-        query = select(Customer).where(Customer.email == customer_data["email"])
-        existing_customer = db.session.execute(query).scalars().first()
-        if existing_customer:
-            return jsonify({"error": "Email already exists"}), 400
+    # if new VIN, verify does not already exist in DB
+    if service_ticket_data.get("VIN") != service_ticket.VIN:
+        query = select(ServiceTicket).where(ServiceTicket.VIN == service_ticket_data["VIN"])
+        existing_service_ticket = db.session.execute(query).scalars().first()
+        if existing_service_ticket:
+            return jsonify({"error": "Service Ticket with this VIN already exists"}), 400
 
-    for key, value in customer_data.items():
-        setattr(customer, key, value)
+    for key, value in service_ticket_data.items():
+        setattr(service_ticket, key, value)
 
     db.session.commit()
-    return customer_schema.jsonify(customer), 200
+    return service_ticket_schema.jsonify(service_ticket), 200
 
 
-# DELETE CUSTOMER
-@customers_bp.route("/<int:customer_id>", methods=["DELETE"])
-def delete_customer(customer_id):
-    customer = db.session.get(Customer, customer_id)
+# DELETE SERVICE TICKET
+@service_tickets_bp.route("/<int:service_ticket_id>", methods=["DELETE"])
+def delete_service_ticket(service_ticket_id):
+    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
 
-    if not customer:
-        return jsonify({"error": "Customer not found."}), 404
+    if not service_ticket:
+        return jsonify({"error": "Service Ticket not found."}), 404
 
-    db.session.delete(customer)
+    db.session.delete(service_ticket)
     db.session.commit()
     return (
-        jsonify({"message": f"Customer id: {customer_id} deleted successfully."}),
+        jsonify({"message": f"Service Ticket id: {service_ticket_id} deleted successfully."}),
         200,
     )

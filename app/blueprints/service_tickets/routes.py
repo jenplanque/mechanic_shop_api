@@ -78,3 +78,33 @@ def add_mechanic_to_service_ticket(service_ticket_id, mechanic_id):
             jsonify({"message": "Mechanic already assigned to this Service Ticket"}),
             200,
         )
+
+
+# REMOVE MECHANIC FROM SERVICE TICKET (supports DELETE and PUT)
+@service_tickets_bp.route(
+    "/<int:service_ticket_id>/remove-mechanic/<int:mechanic_id>",
+    methods=["DELETE", "PUT"],
+)
+def remove_mechanic_from_service_ticket(service_ticket_id, mechanic_id):
+    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
+    if not service_ticket:
+        return jsonify({"error": "Service Ticket not found"}), 404
+
+    mechanic = db.session.get(Mechanic, mechanic_id)
+    if not mechanic:
+        return jsonify({"error": "Mechanic not on Service Ticket"}), 404
+
+    # Ensure mechanics relationship is loaded and remove if present
+    if mechanic in service_ticket.mechanics:
+        service_ticket.mechanics.remove(mechanic)
+        db.session.commit()
+        return (
+            jsonify(
+                {
+                    "message": f"Mechanic {mechanic_id} removed from Service Ticket {service_ticket_id}"
+                }
+            ),
+            200,
+        )
+    else:
+        return jsonify({"error": "Mechanic not assigned to this Service Ticket"}), 200

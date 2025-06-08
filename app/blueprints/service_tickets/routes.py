@@ -62,6 +62,7 @@ def assign_mechanic(service_ticket_id, mechanic_id):
     service_ticket = db.session.get(ServiceTicket, service_ticket_id)
     mechanic = db.session.get(Mechanic, mechanic_id)
 
+    # Check if both service_ticket and mechanic exist
     if service_ticket is None:
         return jsonify({"error": "Service Ticket not found"}), 404
     if mechanic is None:
@@ -69,63 +70,21 @@ def assign_mechanic(service_ticket_id, mechanic_id):
 
     # Ensure the 'mechanics' relationship exists and is a list-like object
     if not hasattr(service_ticket, "mechanics") or service_ticket.mechanics is None:
-        return jsonify({"error": "Service Ticket does not support mechanics assignment."}), 400
+        return (
+            jsonify({"error": "Service Ticket does not support mechanics assignment"}),
+            400,
+        )
 
     # Avoid duplicates
-    if mechanic not in service_ticket.mechanics:
-        service_ticket.mechanics.append(mechanic)
-        db.session.commit()
-
-    return service_ticket_schema.jsonify(service_ticket), 200
-
-
-# @service_tickets_bp.route(
-#     "/<int:service_ticket_id>/assign/<int:mechanic_id>", methods=["PUT"]
-# )
-# def assign_mechanic_to_service_ticket(service_ticket_id, mechanic_id):
-#     service_ticket = db.session.get(ServiceTicket, service_ticket_id)
-
-#     if not service_ticket:
-#         return jsonify({"error": "Service Ticket not found"}), 404
-
-#     if not mechanic_id or not db.session.get(Mechanic, mechanic_id):
-#         return jsonify({"error": "Mechanic not found"}), 404
-
-#     service_ticket.mechanic_id = mechanic_id
-#     db.session.commit()
-#     return service_ticket_schema.jsonify(service_ticket), 200
-
-
-# UPDATE SERVICE TICKET
-@service_tickets_bp.route("/<int:service_ticket_id>", methods=["PUT"])
-def update_service_ticket(service_ticket_id):
-    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
-
-    if not service_ticket:
-        return jsonify({"error": "Service Ticket not found."}), 404
-
-    try:
-        service_ticket_data = service_ticket_schema.load(request.json)
-    except ValidationError as e:
-        return jsonify(e.messages), 400
-
-    # If new VIN, verify it does not already exist in DB
-    if service_ticket_data.get("VIN") != service_ticket.VIN:
-        query = select(ServiceTicket).where(
-            ServiceTicket.VIN == service_ticket_data["VIN"]
+    if mechanic in service_ticket.mechanics:
+        return (
+            jsonify({"message": "Mechanic already assigned to this Service Ticket"}),
+            200,
         )
-        existing_service_ticket = db.session.execute(query).scalars().first()
-        if existing_service_ticket:
-            return (
-                jsonify({"error": "Service Ticket with this VIN already exists"}),
-                400,
-            )
-
-    for key, value in service_ticket_data.items():
-        setattr(service_ticket, key, value)
-
+    # Add mechanic to service ticket if not already assigned
+    service_ticket.mechanics.append(mechanic)
     db.session.commit()
-    return service_ticket_schema.jsonify(service_ticket), 200
+    return jsonify(service_ticket_schema.dump(service_ticket)), 200
 
 
 # DELETE SERVICE TICKET
@@ -144,3 +103,38 @@ def delete_service_ticket(service_ticket_id):
         ),
         200,
     )
+
+
+#  maybe...
+
+
+# UPDATE SERVICE TICKET
+@service_tickets_bp.route("/<int:service_ticket_id>", methods=["PUT"])
+def update_service_ticket(service_ticket_id):
+    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
+
+    if not service_ticket:
+        return jsonify({"error": "Service Ticket not found."}), 404
+
+    try:
+        service_ticket_data = service_ticket_schema.load(request.json)
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+
+    # # If new VIN, verify it does not already exist in DB
+    # if service_ticket_data.get("VIN") != service_ticket.VIN:
+    #     query = select(ServiceTicket).where(
+    #         ServiceTicket.VIN == service_ticket_data["VIN"]
+    #     )
+    #     existing_service_ticket = db.session.execute(query).scalars().first()
+    #     if existing_service_ticket:
+    #         return (
+    #             jsonify({"error": "Service Ticket with this VIN already exists"}),
+    #             400,
+    #         )
+
+    for key, value in service_ticket_data.items():
+        setattr(service_ticket, key, value)
+
+    db.session.commit()
+    return service_ticket_schema.jsonify(service_ticket), 200

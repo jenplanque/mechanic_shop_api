@@ -23,4 +23,4 @@ def create_app(config_name):
     # from app.blueprints.service_tickets import service_tickets_bp
     # app.register_blueprint(service_tickets_bp, url_prefix="/service-tickets")
 
-    return app 
+    return app

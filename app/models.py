@@ -3,10 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing import List
 
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
 
 class Base(DeclarativeBase):
     pass
@@ -40,25 +36,12 @@ class Customer(Base):
     phone: Mapped[str] = mapped_column(db.String(15), nullable=False)
 
     service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
-        back_populates="customer"
+        "ServiceTicket", back_populates="customer"
     )
 
-
-class ServiceTicket(Base):
-    __tablename__ = "service_tickets"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    VIN: Mapped[str] = mapped_column(db.String(17), nullable=False, unique=True)
-    service_date: Mapped[date] = mapped_column(db.Date)
-    service_desc: Mapped[str] = mapped_column(db.String(500), nullable=False)
-    customer_id: Mapped[int] = mapped_column(db.ForeignKey("customers.id"))
-
-    customer: Mapped["Customer"] = db.relationship(
-        secondary=service_customers, back_populates="service_tickets"
-    )
-    mechanics: Mapped[List["Mechanic"]] = db.relationship(
-        secondary=service_mechanics, back_populates="service_tickets"
-    )
+    # service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
+    #     back_populates="customer"
+    # )
 
 
 class Mechanic(Base):
@@ -72,4 +55,21 @@ class Mechanic(Base):
 
     service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
         secondary=service_mechanics, back_populates="mechanics"
+    )
+
+
+class ServiceTicket(Base):
+    __tablename__ = "service_tickets"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    VIN: Mapped[str] = mapped_column(db.String(17), nullable=False, unique=True)
+    service_date: Mapped[date] = mapped_column(db.Date)
+    service_desc: Mapped[str] = mapped_column(db.String(500), nullable=False)
+    customer_id: Mapped[int] = mapped_column(db.ForeignKey("customers.id"))
+
+    customer: Mapped["Customer"] = db.relationship(
+        "Customer", back_populates="service_tickets"
+    )
+    mechanics: Mapped[List["Mechanic"]] = db.relationship(
+        "Mechanic", secondary=service_mechanics, back_populates="service_tickets"
     )

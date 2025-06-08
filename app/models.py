@@ -73,3 +73,6 @@ class ServiceTicket(Base):
     mechanics: Mapped[List["Mechanic"]] = db.relationship(
         "Mechanic", secondary=service_mechanics, back_populates="service_tickets"
     )
+
+
+#   test

@@ -108,3 +108,24 @@ def remove_mechanic_from_service_ticket(service_ticket_id, mechanic_id):
         )
     else:
         return jsonify({"error": "Mechanic not assigned to this Service Ticket"}), 200
+
+
+# DELETE SERVICE TICKET
+@service_tickets_bp.route("/<int:service_ticket_id>", methods=["DELETE"])
+def delete_service_ticket(service_ticket_id):
+    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
+
+    if not service_ticket:
+        return jsonify({"error": "Service Ticket not found"}), 404
+
+    # Check if any mechanics are still assigned
+    if service_ticket.mechanics and len(service_ticket.mechanics) > 0:
+        mechanic_ids = [mechanic.id for mechanic in service_ticket.mechanics]
+        return (
+            jsonify({"error": f"mechanic(s) {mechanic_ids} still assigned to ticket"}),
+            400,
+        )
+
+    db.session.delete(service_ticket)
+    db.session.commit()
+    return jsonify({"message": "Service Ticket deleted successfully"}), 200

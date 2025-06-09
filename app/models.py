@@ -39,10 +39,6 @@ class Customer(Base):
         "ServiceTicket", back_populates="customer"
     )
 
-    # service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
-    #     back_populates="customer"
-    # )
-
 
 class Mechanic(Base):
     __tablename__ = "mechanics"

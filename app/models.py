@@ -35,9 +35,9 @@ class Customer(Base):
     email: Mapped[str] = mapped_column(db.String(250), nullable=False, unique=True)
     phone: Mapped[str] = mapped_column(db.String(15), nullable=False)
 
-    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
-        "ServiceTicket", back_populates="customer"
-    )
+    # service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
+    #     "ServiceTicket", back_populates="customer"
+    # )
 
 
 class Mechanic(Base):

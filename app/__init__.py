@@ -1,3 +1,4 @@
+# application/__init__.py
 from flask import Flask
 from .extensions import ma, limiter
 from .models import db  # Import the SQLAlchemy instance from models

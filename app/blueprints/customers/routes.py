@@ -1,4 +1,5 @@
-from .schemas import customer_schema, customers_schema
+# import email, username, password
+from .schemas import customer_schema, customers_schema, login_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
@@ -6,18 +7,58 @@ from app.models import db, Customer
 from app.extensions import limiter, cache
 from . import customers_bp
 
+# from app.blueprints.customers import customers_bp
+from app.utils.util import encode_token, token_required
+
 # from flask_limiter import Limiter
 # from flask_limiter.util import get_remote_address
 # from flask_caching import Cache
 
 
-# from app.blueprints.customers import customers_bp
+@customers_bp.route("/login", methods=["POST"])
+def login_customer():
+    try:
+        credentials = login_schema.load(request.json)
+        email = credentials["email"]
+        password = credentials["password"]
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+    # except KeyError:
+    #     return jsonify({'messages': 'Invalid payload, expecting username and password'}), 400
+
+    query = select(Customer).where(Customer.email == email)
+    customer = (
+        db.session.execute(query).scalars().first()
+    )  # query cust table for cust with this email
+
+    if customer and customer.password == password:
+        auth_token = encode_token(customer.id)  # Encode the token with customer ID
+
+        response = {
+            "status": "success",
+            "message": "Login successful",
+            "auth_token": auth_token,
+        }
+        return jsonify(response), 200
+    else:
+        return jsonify({"error": "Invalid email or password"}), 401
+
+    # if not email or not password:
+    #     return jsonify({"error": "Email and password are required"}), 400
+
+    # query = select(Customer).where(Customer.email == email)
+    # customer = db.session.execute(query).scalars().first()
+
+    # if not customer or not customer.verify_password(password):
+    #     return jsonify({"error": "Invalid email or password"}), 401
+
+    # token = encode_token(customer.id)
+    # return jsonify({"token": token}), 200
 
 
 # ADD CUSTOMER and GET ALL CUSTOMERS
 @customers_bp.route("/", methods=["POST", "GET"])
-@cache.cached(timeout=20)
-# @limiter.limit("5 per day")  # Limit to 5 requests per day
+@cache.cached(timeout=60)  # Cache for 60 seconds to reduce database load
 def create_customer():
     if request.method == "POST":
         try:
@@ -29,9 +70,15 @@ def create_customer():
         query = select(Customer).where(Customer.email == customer_data["email"])
         existing_customer = db.session.execute(query).scalars().all()
         if existing_customer:
-            return jsonify({"error": "Email already exists"}), 400
+            return jsonify({"error": "Email already exists in DB"}), 400
 
-        new_customer = Customer(**customer_data)
+        # new_customer = Customer(**customer_data)
+        new_customer = Customer(
+            name=customer_data["name"],
+            email=customer_data["email"],
+            phone=customer_data["phone"],
+            password=customer_data["password"],
+        )
         db.session.add(new_customer)
         db.session.commit()
         return customer_schema.jsonify(new_customer), 201
@@ -45,8 +92,6 @@ def create_customer():
 
 # GET SPECIFIC CUSTOMER
 @customers_bp.route("/<int:customer_id>", methods=["GET"])
-@limiter.limit("5 per day")  # Limit to 5 requests per day
-@cache.cached(timeout=60)
 def get_customer(customer_id):
     customer = db.session.get(Customer, customer_id)
 
@@ -57,7 +102,9 @@ def get_customer(customer_id):
 
 # UPDATE CUSTOMER
 @customers_bp.route("/<int:customer_id>", methods=["PUT"])
-# @limiter.limit("5 per day")  # Limit to 5 requests per day
+@limiter.limit(
+    "5 per day"
+)  # Limit to avoid abuse from excessive changes made to customer records
 def update_customer(customer_id):
     customer = db.session.get(Customer, customer_id)
 
@@ -84,10 +131,13 @@ def update_customer(customer_id):
 
 
 # DELETE CUSTOMER
-@customers_bp.route("/<int:customer_id>", methods=["DELETE"])
-@limiter.limit("5 per day")  # Limit to 5 requests per day
+@customers_bp.route("/", methods=["DELETE"])
+# @customers_bp.route("/<int:customer_id>", methods=["DELETE"]) - OLD WAY
+@token_required  # Ensure the user is authenticated before allowing deletion
+@limiter.limit("5 per day")  # Limit to avoid abuse from excessive deletions
 def delete_customer(customer_id):
-    customer = db.session.get(Customer, customer_id)
+    query = select(Customer).where(Customer.id == customer_id)
+    customer = db.session.execute(query).scalars().first()
 
     if not customer:
         return jsonify({"error": "Customer not found"}), 404

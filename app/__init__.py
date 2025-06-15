@@ -1,4 +1,3 @@
-# application/__init__.py
 from flask import Flask
 from .extensions import ma, limiter, cache
 from .models import db  # Import the SQLAlchemy instance from models
@@ -11,9 +10,11 @@ from .blueprints.service_tickets import (
 
 def create_app(config_name):
     app = Flask(__name__)
-    
+
     # Load app configuration
     app.config.from_object(f"config.{config_name}")
+    app.config["RATELIMIT_STORAGE_URL"] = "redis://localhost:6379"
+    # app.config.from_envvar("FLASK_CONFIG", silent=True)
 
     # Initialize extensions
     ma.init_app(app)  # Initialize Marshmallow

@@ -9,7 +9,7 @@ from . import mechanics_bp
 
 # ADD MECHANIC and GET ALL MECHANICS
 @mechanics_bp.route("/", methods=["POST", "GET"])
-@cache.cached(timeout=60)
+@cache.cached(timeout=60) # Cache for 60 seconds to reduce database load
 def create_mechanic():
     if request.method == "POST":
         try:
@@ -74,7 +74,7 @@ def update_mechanic(mechanic_id):
 
 # DELETE MECHANIC
 @mechanics_bp.route("/<int:mechanic_id>", methods=["DELETE"])
-@limiter.limit("5 per day")  # Limit to 5 requests per day
+@limiter.limit("5 per day")  # Limit to avoid abuse from excessive deletions
 def delete_mechanic(mechanic_id):
     mechanic = db.session.get(Mechanic, mechanic_id)
 

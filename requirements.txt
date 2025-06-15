@@ -1,8 +1,10 @@
+async-timeout==5.0.1
 backports-datetime-fromisoformat==2.0.3
 blinker==1.9.0
 cachelib==0.13.0
 click==8.1.8
 Deprecated==1.2.18
+ecdsa==0.19.1
 Flask==3.1.1
 Flask-Caching==2.3.1
 Flask-Limiter==3.11.0
@@ -20,9 +22,14 @@ mdurl==0.1.2
 mysql-connector-python==9.3.0
 ordered-set==4.1.0
 packaging==24.2
+pyasn1==0.6.1
 Pygments==2.19.1
 python-dotenv==1.1.0
+python-jose==3.5.0
+redis==6.2.0
 rich==13.9.4
+rsa==4.9.1
+six==1.17.0
 SQLAlchemy==2.0.41
 typing_extensions==4.13.2
 Werkzeug==3.1.3

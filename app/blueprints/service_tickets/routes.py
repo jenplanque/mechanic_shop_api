@@ -3,7 +3,8 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import db, ServiceTicket, Customer, Mechanic
-from app.extensions import limiter
+
+# from app.extensions import limiter, cache
 from . import service_tickets_bp
 
 

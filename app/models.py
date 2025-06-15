@@ -2,6 +2,7 @@ from datetime import date
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing import List
+from sqlalchemy import Numeric
 
 
 class Base(DeclarativeBase):
@@ -19,12 +20,12 @@ service_mechanics = db.Table(
     db.Column("mechanic_id", db.ForeignKey("mechanics.id")),
 )
 
-service_customers = db.Table(
-    "service_customers",
-    Base.metadata,
-    db.Column("service_id", db.ForeignKey("service_tickets.id")),
-    db.Column("customer_id", db.ForeignKey("customers.id")),
-)
+# service_customers = db.Table(
+#     "service_customers",
+#     Base.metadata,
+#     db.Column("service_id", db.ForeignKey("service_tickets.id")),
+#     db.Column("customer_id", db.ForeignKey("customers.id")),
+# )
 
 
 class Customer(Base):
@@ -47,7 +48,7 @@ class Mechanic(Base):
     name: Mapped[str] = mapped_column(db.String(255), nullable=False)
     email: Mapped[str] = mapped_column(db.String(250), nullable=False, unique=True)
     phone: Mapped[str] = mapped_column(db.String(15), nullable=False)
-    salary: Mapped[float] = mapped_column(db.Float, nullable=False)
+    salary: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
 
     service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
         secondary=service_mechanics, back_populates="mechanics"
@@ -63,9 +64,9 @@ class ServiceTicket(Base):
     service_desc: Mapped[str] = mapped_column(db.String(500), nullable=False)
     customer_id: Mapped[int] = mapped_column(db.ForeignKey("customers.id"))
 
-    customer: Mapped["Customer"] = db.relationship(
-        "Customer", back_populates="service_tickets"
-    )
+    # customer: Mapped["Customer"] = db.relationship(
+    #     "Customer", back_populates="service_tickets"
+    # )
     mechanics: Mapped[List["Mechanic"]] = db.relationship(
         "Mechanic", secondary=service_mechanics, back_populates="service_tickets"
     )

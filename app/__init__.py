@@ -1,6 +1,6 @@
 # application/__init__.py
 from flask import Flask
-from .extensions import ma, limiter
+from .extensions import ma, limiter, cache
 from .models import db  # Import the SQLAlchemy instance from models
 from .blueprints.customers import customers_bp  # Import the customers blueprint
 from .blueprints.mechanics import mechanics_bp  # Import the mechanics blueprint
@@ -11,12 +11,15 @@ from .blueprints.service_tickets import (
 
 def create_app(config_name):
     app = Flask(__name__)
+    
+    # Load app configuration
     app.config.from_object(f"config.{config_name}")
 
     # Initialize extensions
     ma.init_app(app)  # Initialize Marshmallow
     db.init_app(app)  # Initialize SQLAlchemy
     limiter.init_app(app)
+    cache.init_app(app)  # Initialize Flask-Caching
 
     # Register blueprints
     app.register_blueprint(customers_bp, url_prefix="/customers")

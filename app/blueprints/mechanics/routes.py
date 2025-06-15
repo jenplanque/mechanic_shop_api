@@ -3,12 +3,14 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import db, Mechanic
+from app.extensions import limiter, cache
 from . import mechanics_bp
 
 
 # ADD MECHANIC and GET ALL MECHANICS
 @mechanics_bp.route("/", methods=["POST", "GET"])
-def mechanics():
+@cache.cached(timeout=60)
+def create_mechanic():
     if request.method == "POST":
         try:
             mechanic_data = mechanic_schema.load(request.json)
@@ -72,6 +74,7 @@ def update_mechanic(mechanic_id):
 
 # DELETE MECHANIC
 @mechanics_bp.route("/<int:mechanic_id>", methods=["DELETE"])
+@limiter.limit("5 per day")  # Limit to 5 requests per day
 def delete_mechanic(mechanic_id):
     mechanic = db.session.get(Mechanic, mechanic_id)
 

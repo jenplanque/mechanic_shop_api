@@ -6,6 +6,8 @@ class DevelopmentConfig:
         f"mysql+mysqlconnector://root:{os.getenv('DB_PW')}@localhost/mechanic_db"
     )
     DEBUG = True
+    CACHE_TYPE = 'SimpleCache'
+    CACHE_DEFAULT_TIMEOUT = 300  # Default cache timeout in seconds
 
 
 class TestingConfig:

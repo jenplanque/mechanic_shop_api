@@ -3,12 +3,22 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import db, Customer
+from app.extensions import limiter, cache
 from . import customers_bp
+
+# from flask_limiter import Limiter
+# from flask_limiter.util import get_remote_address
+# from flask_caching import Cache
+
+
+# from app.blueprints.customers import customers_bp
 
 
 # ADD CUSTOMER and GET ALL CUSTOMERS
 @customers_bp.route("/", methods=["POST", "GET"])
-def customers():
+@cache.cached(timeout=20)
+# @limiter.limit("5 per day")  # Limit to 5 requests per day
+def create_customer():
     if request.method == "POST":
         try:
             customer_data = customer_schema.load(request.json)
@@ -27,14 +37,16 @@ def customers():
         return customer_schema.jsonify(new_customer), 201
 
     elif request.method == "GET":
-        query = select(Customer)
-        customers = db.session.execute(query).scalars().all()
 
-        return customers_schema.jsonify(customers), 200
+        query = select(Customer)
+        result = db.session.execute(query).scalars().all()
+        return customers_schema.jsonify(result), 200
 
 
 # GET SPECIFIC CUSTOMER
 @customers_bp.route("/<int:customer_id>", methods=["GET"])
+@limiter.limit("5 per day")  # Limit to 5 requests per day
+@cache.cached(timeout=60)
 def get_customer(customer_id):
     customer = db.session.get(Customer, customer_id)
 
@@ -45,6 +57,7 @@ def get_customer(customer_id):
 
 # UPDATE CUSTOMER
 @customers_bp.route("/<int:customer_id>", methods=["PUT"])
+# @limiter.limit("5 per day")  # Limit to 5 requests per day
 def update_customer(customer_id):
     customer = db.session.get(Customer, customer_id)
 
@@ -72,6 +85,7 @@ def update_customer(customer_id):
 
 # DELETE CUSTOMER
 @customers_bp.route("/<int:customer_id>", methods=["DELETE"])
+@limiter.limit("5 per day")  # Limit to 5 requests per day
 def delete_customer(customer_id):
     customer = db.session.get(Customer, customer_id)
 

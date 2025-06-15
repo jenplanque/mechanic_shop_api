@@ -3,13 +3,13 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import db, ServiceTicket, Customer, Mechanic
-
+from app.extensions import limiter
 from . import service_tickets_bp
 
 
 # ADD SERVICE TICKET and GET ALL SERVICE TICKETS
 @service_tickets_bp.route("/", methods=["POST", "GET"])
-def service_tickets():
+def create_service_ticket():
     if request.method == "POST":
         try:
             service_ticket_data = service_ticket_schema.load(request.json)

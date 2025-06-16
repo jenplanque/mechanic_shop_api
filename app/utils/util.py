@@ -30,21 +30,25 @@ def token_required(f):
         token = None
         # Look for the token in the Authorization header
         if "Authorization" in request.headers:
-            token = request.headers["Authorization"].split(" ")[1]
+            token = request.headers["Authorization"].split()[1]
 
-        if not token:
-            return jsonify({"message": "Required token is missing!"}), 401
+            if not token:
+                return jsonify({"message": "Required token missing"}), 401
 
-        try:
-            # Decode the token
-            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            customer_id = data["sub"]  # Fetch the customer ID
+            try:
+                # Decode the token
+                data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+                print(data)  # Debugging line to see the decoded data
+                customer_id = data["sub"]  # Fetch the customer ID
 
-        except jose.exceptions.ExpiredSignatureError:
-            return jsonify({"message": "Token has expired!"}), 401
-        except jose.exceptions.JWTError:
-            return jsonify({"message": "Invalid token!"}), 401
+            except jose.exceptions.ExpiredSignatureError as e:
+                # print(e)  # Debugging line to see the error
+                return jsonify({"message": "Token expired"}), 400
+            except jose.exceptions.JWTError:
+                return jsonify({"message": "Invalid token"}), 400
 
-        return f(customer_id, *args, **kwargs)
+            return f(customer_id, *args, **kwargs)
+        else:
+            return jsonify({"message": "Valid Login REQUIRED to proceed"}), 401
 
     return decorated

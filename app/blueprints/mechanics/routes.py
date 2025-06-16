@@ -7,32 +7,35 @@ from app.extensions import limiter, cache
 from . import mechanics_bp
 
 
-# ADD MECHANIC and GET ALL MECHANICS
-@mechanics_bp.route("/", methods=["POST", "GET"])
-@cache.cached(timeout=60) # Cache for 60 seconds to reduce database load
+# ADD MECHANIC
+@mechanics_bp.route("/", methods=["POST"])
+@cache.cached(timeout=30)  # Cache for 30 seconds to reduce database load
 def create_mechanic():
-    if request.method == "POST":
-        try:
-            mechanic_data = mechanic_schema.load(request.json)
+    try:
+        mechanic_data = mechanic_schema.load(request.json)
 
-        except ValidationError as e:
-            return jsonify(e.messages), 400
+    except ValidationError as e:
+        return jsonify(e.messages), 400
 
-        query = select(Mechanic).where(Mechanic.email == mechanic_data["email"])
-        existing_mechanic = db.session.execute(query).scalars().all()
-        if existing_mechanic:
-            return jsonify({"error": "Email already exists"}), 400
+    query = select(Mechanic).where(Mechanic.email == mechanic_data["email"])
+    existing_mechanic = db.session.execute(query).scalars().all()
+    if existing_mechanic:
+        return jsonify({"error": "Email already exists"}), 400
 
-        new_mechanic = Mechanic(**mechanic_data)
-        db.session.add(new_mechanic)
-        db.session.commit()
-        return mechanic_schema.jsonify(new_mechanic), 201
+    new_mechanic = Mechanic(**mechanic_data)
+    db.session.add(new_mechanic)
+    db.session.commit()
+    return mechanic_schema.jsonify(new_mechanic), 201
 
-    elif request.method == "GET":
-        query = select(Mechanic)
-        mechanics = db.session.execute(query).scalars().all()
 
-        return mechanics_schema.jsonify(mechanics), 200
+# GET ALL MECHANICS
+@mechanics_bp.route("/", methods=["GET"])
+@limiter.limit("5 per minute")  # Limit to avoid abuse from excessive requests
+def get_all_mechanics():
+    query = select(Mechanic)
+    mechanics = db.session.execute(query).scalars().all()
+
+    return mechanics_schema.jsonify(mechanics), 200
 
 
 # GET SPECIFIC MECHANIC

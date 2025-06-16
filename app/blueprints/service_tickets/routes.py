@@ -8,41 +8,42 @@ from app.models import db, ServiceTicket, Customer, Mechanic
 from . import service_tickets_bp
 
 
-# ADD SERVICE TICKET and GET ALL SERVICE TICKETS
-@service_tickets_bp.route("/", methods=["POST", "GET"])
+# ADD SERVICE TICKET
+@service_tickets_bp.route("/", methods=["POST"])
 def create_service_ticket():
-    if request.method == "POST":
-        try:
-            service_ticket_data = service_ticket_schema.load(request.json)
+    try:
+        service_ticket_data = service_ticket_schema.load(request.json)
 
-        except ValidationError as e:
-            return jsonify(e.messages), 400
+    except ValidationError as e:
+        return jsonify(e.messages), 400
 
-        query = select(ServiceTicket).where(
-            ServiceTicket.VIN == service_ticket_data["VIN"]
-        )
-        existing_service_ticket = db.session.execute(query).scalars().all()
-        if existing_service_ticket:
-            return (
-                jsonify({"error": "Service Ticket with this VIN already exists"}),
-                400,
-            )
+    # query = select(ServiceTicket).where(
+    #     ServiceTicket.VIN == service_ticket_data["VIN"]
+    # )
+    # existing_service_ticket = db.session.execute(query).scalars().all()
+    # if existing_service_ticket:
+    #     return (
+    #         jsonify({"error": "Service Ticket with this VIN already exists"}),
+    #         400,
+    #     )
 
-        # Verify that the customer_id exists in the Customer table before proceeding
-        customer_id = service_ticket_data.get("customer_id")
-        if not customer_id or not db.session.get(Customer, customer_id):
-            return jsonify({"error": "Customer not found."}), 404
+    # Verify that the customer_id exists in the Customer table before proceeding
+    customer_id = service_ticket_data.get("customer_id")
+    if not customer_id or not db.session.get(Customer, customer_id):
+        return jsonify({"error": "Customer not found"}), 404
 
-        new_service_ticket = ServiceTicket(**service_ticket_data)
-        db.session.add(new_service_ticket)
-        db.session.commit()
-        return service_ticket_schema.jsonify(new_service_ticket), 201
+    new_service_ticket = ServiceTicket(**service_ticket_data)
+    db.session.add(new_service_ticket)
+    db.session.commit()
+    return service_ticket_schema.jsonify(new_service_ticket), 201
 
-    elif request.method == "GET":
-        query = select(ServiceTicket)
-        service_tickets = db.session.execute(query).scalars().all()
 
-        return service_tickets_schema.jsonify(service_tickets), 200
+# GET ALL SERVICE TICKETS
+@service_tickets_bp.route("/", methods=["GET"])
+def get_all_service_tickets():
+    query = select(ServiceTicket)
+    result = db.session.execute(query).scalars().all()
+    return service_tickets_schema.jsonify(result), 200
 
 
 # GET SPECIFIC SERVICE TICKET
@@ -53,6 +54,23 @@ def get_service_ticket(service_ticket_id):
     if service_ticket:
         return service_ticket_schema.jsonify(service_ticket), 200
     return jsonify({"error": "Service Ticket not found."}), 404
+
+
+# GET SERVICE TICKETS BY CUSTOMER
+# @service_tickets_bp.route("/customer", methods=["GET"])
+# @token_required
+# def get_service_tickets_by_customer():
+#     customer_id = request.args.get("customer_id")
+#     if not customer_id:
+#         return jsonify({"error": "Customer ID is required"}), 400
+
+#     customer = db.session.get(Customer, customer_id)
+#     if not customer:
+#         return jsonify({"error": "Customer not found"}), 404
+
+#     query = select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)
+#     result = db.session.execute(query).scalars().all()
+#     return service_tickets_schema.jsonify(result), 200
 
 
 # ADD MECHANIC TO SERVICE TICKET

@@ -15,6 +15,7 @@ from app.utils.util import encode_token, token_required
 # from flask_caching import Cache
 
 
+# CUSTOMER LOGIN
 @customers_bp.route("/login", methods=["POST"])
 def login_customer():
     try:
@@ -23,8 +24,6 @@ def login_customer():
         password = credentials["password"]
     except ValidationError as e:
         return jsonify(e.messages), 400
-    # except KeyError:
-    #     return jsonify({'messages': 'Invalid payload, expecting username and password'}), 400
 
     query = select(Customer).where(Customer.email == email)
     customer = (
@@ -56,38 +55,39 @@ def login_customer():
     # return jsonify({"token": token}), 200
 
 
-# ADD CUSTOMER and GET ALL CUSTOMERS
-@customers_bp.route("/", methods=["POST", "GET"])
-@cache.cached(timeout=60)  # Cache for 60 seconds to reduce database load
+# ADD CUSTOMER
+@customers_bp.route("/", methods=["POST"])
+# @cache.cached(timeout=60)  # Cache for 60 seconds to reduce database load
 def create_customer():
-    if request.method == "POST":
-        try:
-            customer_data = customer_schema.load(request.json)
+    try:
+        customer_data = customer_schema.load(request.json)
 
-        except ValidationError as e:
-            return jsonify(e.messages), 400
+    except ValidationError as e:
+        return jsonify(e.messages), 400
 
-        query = select(Customer).where(Customer.email == customer_data["email"])
-        existing_customer = db.session.execute(query).scalars().all()
-        if existing_customer:
-            return jsonify({"error": "Email already exists in DB"}), 400
+    query = select(Customer).where(Customer.email == customer_data["email"])
+    existing_customer = db.session.execute(query).scalars().all()
+    if existing_customer:
+        return jsonify({"error": "Email already exists"}), 400
 
-        # new_customer = Customer(**customer_data)
-        new_customer = Customer(
-            name=customer_data["name"],
-            email=customer_data["email"],
-            phone=customer_data["phone"],
-            password=customer_data["password"],
-        )
-        db.session.add(new_customer)
-        db.session.commit()
-        return customer_schema.jsonify(new_customer), 201
+    new_customer = Customer(**customer_data)
+    # new_customer = Customer(
+    #     name=customer_data["name"],
+    #     email=customer_data["email"],
+    #     phone=customer_data["phone"],
+    #     password=customer_data["password"],
+    # )
+    db.session.add(new_customer)
+    db.session.commit()
+    return customer_schema.jsonify(new_customer), 201
 
-    elif request.method == "GET":
 
-        query = select(Customer)
-        result = db.session.execute(query).scalars().all()
-        return customers_schema.jsonify(result), 200
+# GET ALL CUSTOMERS
+@customers_bp.route("/", methods=["GET"])
+def get_all_customers():
+    query = select(Customer)
+    result = db.session.execute(query).scalars().all()
+    return customers_schema.jsonify(result), 200
 
 
 # GET SPECIFIC CUSTOMER
@@ -100,8 +100,19 @@ def get_customer(customer_id):
     return jsonify({"error": "Customer not found"}), 404
 
 
+# GET CUSTOMER SERVICE TICKETS
+# @customers_bp.route("/service_tickets", methods=["GET"])
+# @token_required  # Ensure the user is authenticated before allowing access
+# def get_customer_service_tickets():
+#     customer_id = get_jwt_identity()
+#     query = select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)
+#     result = db.session.execute(query).scalars().all()
+#     return service_tickets_schema.jsonify(result), 200
+
+
 # UPDATE CUSTOMER
-@customers_bp.route("/<int:customer_id>", methods=["PUT"])
+@customers_bp.route("/", methods=["PUT"])
+@token_required  # Ensure the user is authenticated before allowing updates
 @limiter.limit(
     "5 per day"
 )  # Limit to avoid abuse from excessive changes made to customer records
@@ -132,7 +143,6 @@ def update_customer(customer_id):
 
 # DELETE CUSTOMER
 @customers_bp.route("/", methods=["DELETE"])
-# @customers_bp.route("/<int:customer_id>", methods=["DELETE"]) - OLD WAY
 @token_required  # Ensure the user is authenticated before allowing deletion
 @limiter.limit("5 per day")  # Limit to avoid abuse from excessive deletions
 def delete_customer(customer_id):

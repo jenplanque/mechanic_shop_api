@@ -3,6 +3,7 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import db, ServiceTicket, Customer, Mechanic
+from app.utils.util import token_required
 
 # from app.extensions import limiter, cache
 from . import service_tickets_bp
@@ -17,17 +18,6 @@ def create_service_ticket():
     except ValidationError as e:
         return jsonify(e.messages), 400
 
-    # query = select(ServiceTicket).where(
-    #     ServiceTicket.VIN == service_ticket_data["VIN"]
-    # )
-    # existing_service_ticket = db.session.execute(query).scalars().all()
-    # if existing_service_ticket:
-    #     return (
-    #         jsonify({"error": "Service Ticket with this VIN already exists"}),
-    #         400,
-    #     )
-
-    # Verify that the customer_id exists in the Customer table before proceeding
     customer_id = service_ticket_data.get("customer_id")
     if not customer_id or not db.session.get(Customer, customer_id):
         return jsonify({"error": "Customer not found"}), 404
@@ -57,20 +47,17 @@ def get_service_ticket(service_ticket_id):
 
 
 # GET SERVICE TICKETS BY CUSTOMER
-# @service_tickets_bp.route("/customer", methods=["GET"])
-# @token_required
-# def get_service_tickets_by_customer():
-#     customer_id = request.args.get("customer_id")
-#     if not customer_id:
-#         return jsonify({"error": "Customer ID is required"}), 400
+@service_tickets_bp.route("/my-tickets", methods=["GET"])
+@token_required
+def get_my_tickets(current_customer_id):
+    query = select(ServiceTicket).where(
+        ServiceTicket.customer_id == current_customer_id
+    )
 
-#     customer = db.session.get(Customer, customer_id)
-#     if not customer:
-#         return jsonify({"error": "Customer not found"}), 404
-
-#     query = select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)
-#     result = db.session.execute(query).scalars().all()
-#     return service_tickets_schema.jsonify(result), 200
+    if not current_customer_id:
+        return jsonify({"error": "Customer not found"}), 404
+    result = db.session.execute(query).scalars().all()
+    return service_tickets_schema.jsonify(result), 200
 
 
 # ADD MECHANIC TO SERVICE TICKET

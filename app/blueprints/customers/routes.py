@@ -6,13 +6,8 @@ from sqlalchemy import select
 from app.models import db, Customer
 from app.extensions import limiter, cache
 from . import customers_bp
-
 # from app.blueprints.customers import customers_bp
 from app.utils.util import encode_token, token_required
-
-# from flask_limiter import Limiter
-# from flask_limiter.util import get_remote_address
-# from flask_caching import Cache
 
 
 # CUSTOMER LOGIN
@@ -71,12 +66,6 @@ def create_customer():
         return jsonify({"error": "Email already exists"}), 400
 
     new_customer = Customer(**customer_data)
-    # new_customer = Customer(
-    #     name=customer_data["name"],
-    #     email=customer_data["email"],
-    #     phone=customer_data["phone"],
-    #     password=customer_data["password"],
-    # )
     db.session.add(new_customer)
     db.session.commit()
     return customer_schema.jsonify(new_customer), 201
@@ -98,16 +87,6 @@ def get_customer(customer_id):
     if customer:
         return customer_schema.jsonify(customer), 200
     return jsonify({"error": "Customer not found"}), 404
-
-
-# GET CUSTOMER SERVICE TICKETS
-# @customers_bp.route("/service_tickets", methods=["GET"])
-# @token_required  # Ensure the user is authenticated before allowing access
-# def get_customer_service_tickets():
-#     customer_id = get_jwt_identity()
-#     query = select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)
-#     result = db.session.execute(query).scalars().all()
-#     return service_tickets_schema.jsonify(result), 200
 
 
 # UPDATE CUSTOMER

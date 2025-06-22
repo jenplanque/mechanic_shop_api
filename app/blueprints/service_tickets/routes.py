@@ -64,7 +64,7 @@ def get_my_tickets(current_customer_id):
     return service_tickets_schema.jsonify(result), 200
 
 
-# ADD MECHANIC TO SERVICE TICKET
+# ADD MECHANIC (singular) TO SERVICE TICKET
 @service_tickets_bp.route(
     "/<int:service_ticket_id>/assign-mechanic/<int:mechanic_id>",
     methods=["PUT", "POST"],
@@ -94,7 +94,7 @@ def add_mechanic_to_service_ticket(service_ticket_id, mechanic_id):
         )
 
 
-# REMOVE MECHANIC FROM SERVICE TICKET (supports DELETE and PUT)
+# REMOVE MECHANIC (singular) FROM SERVICE TICKET (supports DELETE and PUT)
 @service_tickets_bp.route(
     "/<int:service_ticket_id>/remove-mechanic/<int:mechanic_id>",
     methods=["DELETE", "PUT"],

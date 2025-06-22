@@ -1,4 +1,4 @@
-from .schemas import service_ticket_schema, service_tickets_schema
+from .schemas import service_ticket_schema, service_tickets_schema, edit_service_ticket_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
@@ -134,4 +134,41 @@ def delete_service_ticket(service_ticket_id):
 
     db.session.delete(service_ticket)
     db.session.commit()
-    return jsonify({"message": "Service Ticket deleted successfully"}), 200
+    return jsonify({f"message": f"Service Ticket #{service_ticket_id} deleted successfully"}), 200
+
+
+@service_tickets_bp.route("/<int:service_ticket_id>", methods=["PUT"])
+def edit_service_ticket(service_ticket_id):
+    try:
+        service_ticket_edits = edit_service_ticket_schema.load(request.json)
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+
+    query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
+    service_ticket = db.session.execute(query).scalars().first()
+    
+    for service_mechanic_id in service_ticket_edits['add_mechanic_ids']:
+        query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
+        Mechanic = db.session.execute(query).scalars().first()
+        
+        if Mechanic and Mechanic not in service_ticket.mechanics:
+            service_ticket.mechanics.append(Mechanic)
+    
+    for service_mechanic_id in service_ticket_edits['remove_mechanic_ids']:
+        query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
+        Mechanic = db.session.execute(query).scalars().first()
+
+        if Mechanic and Mechanic in service_ticket.mechanics:
+            service_ticket.mechanics.remove(Mechanic)
+
+    db.session.commit()
+    return service_ticket_schema.jsonify(service_ticket), 200
+    # return return_loan_schema.jsonify(loan), 200
+
+    # if not service_ticket:
+    #     return jsonify({"error": "Service Ticket not found"}), 404
+
+    # for key, value in service_ticket_edits.items():
+    #     setattr(service_ticket, key, value)
+    # db.session.commit()
+    # return service_ticket_schema.jsonify(service_ticket), 200

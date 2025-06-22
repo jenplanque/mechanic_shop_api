@@ -92,6 +92,7 @@ def delete_mechanic(mechanic_id):
     )
 
 
+# MECHANIC USAGE
 @mechanics_bp.route("/usage", methods=["GET"])
 def mechanic_usage():
     query = select(Mechanic)
@@ -114,4 +115,11 @@ def mechanic_usage():
     )
 
 
-# return mechanics_schema.jsonify(mechanics), 200
+@mechanics_bp.route("/search", methods=["GET"])
+def search_mechanics():
+    name = request.args.get("name")
+
+    query = select(Mechanic).where(Mechanic.name.like(f'%{name}%'))
+    mechanics = db.session.execute(query).scalars().all()
+    
+    return mechanics_schema.jsonify(mechanics)

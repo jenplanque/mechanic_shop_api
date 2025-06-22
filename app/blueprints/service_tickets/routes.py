@@ -151,7 +151,7 @@ def delete_service_ticket(service_ticket_id):
 
 
 # EDIT SERVICE TICKET (add/remove mechanics)
-@service_tickets_bp.route("/<int:service_ticket_id>", methods=["PUT"])
+@service_tickets_bp.route("/<int:service_ticket_id>/edit", methods=["PUT"])
 def edit_service_ticket(service_ticket_id):
     try:
         service_ticket_edits = edit_service_ticket_schema.load(request.json)

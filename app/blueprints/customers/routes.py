@@ -6,7 +6,6 @@ from sqlalchemy import select
 from app.models import db, Customer
 from app.extensions import limiter, cache
 from . import customers_bp
-# from app.blueprints.customers import customers_bp
 from app.utils.util import encode_token, token_required
 
 
@@ -36,18 +35,6 @@ def login_customer():
         return jsonify(response), 200
     else:
         return jsonify({"error": "Invalid email or password"}), 401
-
-    # if not email or not password:
-    #     return jsonify({"error": "Email and password are required"}), 400
-
-    # query = select(Customer).where(Customer.email == email)
-    # customer = db.session.execute(query).scalars().first()
-
-    # if not customer or not customer.verify_password(password):
-    #     return jsonify({"error": "Invalid email or password"}), 401
-
-    # token = encode_token(customer.id)
-    # return jsonify({"token": token}), 200
 
 
 # ADD CUSTOMER

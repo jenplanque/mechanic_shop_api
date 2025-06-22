@@ -4,8 +4,9 @@ from marshmallow import fields
 
 
 class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
+    customer_id = fields.Integer(required=True)
     mechanics = fields.Nested("MechanicSchema", only=("id", "name"), many=True)
-    customer = fields.Nested("CustomerSchema", only=("id","name", "email", "phone"))
+    customer = fields.Nested("CustomerSchema", only=("id", "name", "email", "phone"))
 
     class Meta:
         model = ServiceTicket
@@ -14,24 +15,11 @@ class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
             "VIN",
             "service_date",
             "service_desc",
+            "customer_id",
             "customer",
             "mechanics",
         )
         include_fk = True  # Include foreign keys in the schema
-
-    # You can add custom fields or methods here if needed
-    # For example, if you want to include customer name instead of ID:
-    # customer_name = fields.Method("get_customer_name")
-
-    # def get_customer_name(self, obj):
-    #     return obj.customer.name if obj.customer else None
-
-
-# class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
-#     customer_id = fields.Integer(required=True)
-
-#     class Meta:
-#         model = ServiceTicket
 
 
 class EditServiceTicketSchema(ma.Schema):

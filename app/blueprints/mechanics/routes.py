@@ -90,3 +90,28 @@ def delete_mechanic(mechanic_id):
         jsonify({"message": f"Mechanic id: {mechanic_id} deleted successfully."}),
         200,
     )
+
+
+@mechanics_bp.route("/usage", methods=["GET"])
+def mechanic_usage():
+    query = select(Mechanic)
+    mechanics = db.session.execute(query).scalars().all()
+
+    mechanics.sort(key=lambda mechanic: len(mechanic.service_tickets), reverse=True)
+
+    return (
+        jsonify(
+            [
+                {
+                    "id": mechanic.id,
+                    "name": mechanic.name,
+                    "ticket_count": len(mechanic.service_tickets),
+                }
+                for mechanic in mechanics
+            ]
+        ),
+        200,
+    )
+
+
+# return mechanics_schema.jsonify(mechanics), 200

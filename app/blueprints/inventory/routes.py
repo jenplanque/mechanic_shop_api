@@ -105,7 +105,7 @@ def delete_inventory_item(item_id):
     return (
         jsonify(
             {
-                "message": f"Inventory item id: {item_id} ({inventory_item.name}) deleted successfully"
+                "message": f"Inventory item id: {item_id}, {inventory_item.name} deleted successfully"
             }
         ),
         200,

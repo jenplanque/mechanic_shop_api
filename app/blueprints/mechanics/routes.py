@@ -48,6 +48,19 @@ def get_mechanic(mechanic_id):
     return jsonify({"error": "Mechanic not found."}), 404
 
 
+# SEARCH MECHANICS BY NAME
+@mechanics_bp.route("/search", methods=["GET"])
+def search_mechanics():
+    name = request.args.get("name")
+
+    query = select(Mechanic).where(Mechanic.name.like(f"%{name}%"))
+    mechanics = db.session.execute(query).scalars().all()
+
+    if not mechanics:
+        return jsonify({"error": "No mechanics found with that name."}), 404
+    return mechanics_schema.jsonify(mechanics)
+
+
 # UPDATE MECHANIC
 @mechanics_bp.route("/<int:mechanic_id>", methods=["PUT"])
 def update_mechanic(mechanic_id):
@@ -113,13 +126,3 @@ def mechanic_usage():
         ),
         200,
     )
-
-
-@mechanics_bp.route("/search", methods=["GET"])
-def search_mechanics():
-    name = request.args.get("name")
-
-    query = select(Mechanic).where(Mechanic.name.like(f'%{name}%'))
-    mechanics = db.session.execute(query).scalars().all()
-    
-    return mechanics_schema.jsonify(mechanics)

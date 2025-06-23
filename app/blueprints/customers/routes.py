@@ -1,4 +1,3 @@
-# import email, username, password
 from .schemas import customer_schema, customers_schema, login_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
@@ -63,7 +62,7 @@ def create_customer():
 def get_all_customers():
     try:
         page = int(request.args.get("page", 1))
-        per_page = int(request.args.get("per_page", 10))
+        per_page = int(request.args.get("per_page", 5))
         query = select(Customer)
         customers = db.paginate(query, page=page, per_page=per_page)
         return customers_schema.jsonify(customers), 200
@@ -87,7 +86,7 @@ def get_customer(customer_id):
 @customers_bp.route("/", methods=["PUT"])
 @token_required  # Ensure the user is authenticated before allowing updates
 @limiter.limit(
-    "5 per day"
+    "10 per day"
 )  # Limit to avoid abuse from excessive changes made to customer records
 def update_customer(customer_id):
     customer = db.session.get(Customer, customer_id)

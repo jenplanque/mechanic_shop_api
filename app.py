@@ -1,6 +1,5 @@
 from app import create_app
 from app.models import db 
-# from app.models import Customer, Mechanic, ServiceTicket
 
 app = create_app("DevelopmentConfig")
 

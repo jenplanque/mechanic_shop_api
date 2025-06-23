@@ -87,10 +87,10 @@ def add_mechanic_to_service_ticket(service_ticket_id, mechanic_id):
         return (
             jsonify(
                 {
-                    "message": f"Mechanic '{mechanic.name}' already assigned to this Service Ticket"
+                    "message": f"Mechanic: '{mechanic.name}' already assigned to this Service Ticket"
                 }
             ),
-            200,
+            400,
         )
 
 
@@ -115,13 +115,20 @@ def remove_mechanic_from_service_ticket(service_ticket_id, mechanic_id):
         return (
             jsonify(
                 {
-                    "message": f"Mechanic id: {mechanic_id} '{mechanic.name}' removed from Service Ticket {service_ticket_id}"
+                    "message": f"Mechanic: '{mechanic.name}' removed from Service Ticket {service_ticket_id}"
                 }
             ),
             200,
         )
     else:
-        return jsonify({"error": "Mechanic not assigned to this Service Ticket"}), 200
+        return (
+            jsonify(
+                {
+                    "error": f"Mechanic: '{mechanic.name}' not assigned to this Service Ticket"
+                }
+            ),
+            400,
+        )
 
 
 # ADD INVENTORY ITEM (singular) TO SERVICE TICKET
@@ -142,15 +149,15 @@ def add_item_to_service_ticket(service_ticket_id, item_id):
     if inventory_item not in service_ticket.inventory_items:
         service_ticket.inventory_items.append(inventory_item)
         db.session.commit()
-        return service_ticket_schema.jsonify(service_ticket), 200
+        return jsonify({"message": f"'{inventory_item.name}' successfully added to Ticket #{service_ticket_id}"}), 200
     else:
         return (
             jsonify(
                 {
-                    "message": f"Inventory Item '{inventory_item.name}' already exists in this Service Ticket"
+                    "message": f"'{inventory_item.name}' already assigned to Ticket"
                 }
             ),
-            200,
+            400,
         )
 
 
@@ -175,7 +182,7 @@ def remove_item_from_service_ticket(service_ticket_id, item_id):
         return (
             jsonify(
                 {
-                    "message": f"Item id: {inventory_item.id} '{inventory_item.name}' removed from Service Ticket #{service_ticket_id}"
+                    "message": f"'{inventory_item.name}' removed from Service Ticket #{service_ticket_id}"
                 }
             ),
             200,
@@ -184,10 +191,10 @@ def remove_item_from_service_ticket(service_ticket_id, item_id):
         return (
             jsonify(
                 {
-                    "error": f"Item {inventory_item.id} not assigned to this Service Ticket"
+                    "error": f"Item id: {inventory_item.id} not assigned to this Service Ticket"
                 }
             ),
-            200,
+            400,
         )
 
 
@@ -232,6 +239,32 @@ def edit_service_ticket(service_ticket_id):
         query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
         mechanic = db.session.execute(query).scalars().first()
 
+        if not service_ticket:
+            return (
+                jsonify(
+                    {
+                        "error": f"Service Ticket #{service_ticket_id} not found in system"
+                    }
+                ),
+                404,
+            )
+        if not mechanic:
+            return (
+                jsonify(
+                    {"error": f"Mechanic: '{service_mechanic_id}' not found in system"}
+                ),
+                404,
+            )
+
+        if mechanic and mechanic in service_ticket.mechanics:
+            return (
+                jsonify(
+                    {
+                        "error": f"Mechanic: '{mechanic.name}' already assigned to Service Ticket #{service_ticket_id}"
+                    }
+                ),
+                400,
+            )
         if mechanic and mechanic not in service_ticket.mechanics:
             service_ticket.mechanics.append(mechanic)
 
@@ -239,8 +272,42 @@ def edit_service_ticket(service_ticket_id):
         query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
         mechanic = db.session.execute(query).scalars().first()
 
+        if not service_ticket:
+            return (
+                jsonify(
+                    {
+                        "error": f"Service Ticket #{service_ticket_id} not found in system"
+                    }
+                ),
+                404,
+            )
+        if not mechanic:
+            return (
+                jsonify(
+                    {"error": f"Mechanic: '{service_mechanic_id}' not found in system"}
+                ),
+                404,
+            )
+
+        if mechanic and mechanic not in service_ticket.mechanics:
+            return (
+                jsonify(
+                    {
+                        "error": f"Mechanic: '{mechanic.name}' not assigned to Service Ticket #{service_ticket_id}"
+                    }
+                ),
+                400,
+            )
         if mechanic and mechanic in service_ticket.mechanics:
             service_ticket.mechanics.remove(mechanic)
 
     db.session.commit()
-    return service_ticket_schema.jsonify(service_ticket), 200
+    return (
+        jsonify(
+            {
+                "message": f"Service Ticket #{service_ticket_id} updated successfully",
+                "service_ticket": service_ticket_schema.dump(service_ticket),
+            }
+        ),
+        200,
+    )

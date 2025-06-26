@@ -1,0 +1,56 @@
+# Swagger specification file for the API
+
+swagger: '2.0'
+info:
+  title: 'Mechanic Shop API'
+  description: 'Built from scratch API for a mechanic shop'
+  version: '1.0.0'
+host: '127.0.0.1:5000'
+schemes:
+  - 'http'
+consumes:
+  - 'application/json'
+produces:
+  - 'application/json'
+paths:
+  /customers/login:
+    post:
+      tags:
+        - Customers
+      summary: 'Login endpoint, (generates token)'
+      description: 'Validates customer credentials, generates and return a customer specific token.'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Login Credentials'
+          required: true
+          schema:
+            $ref: '#/definitions/LoginCredentials'
+      responses:
+        200:
+          description: 'Login successful'
+          schema:
+            $ref: '#/definitions/LoginResponse'
+
+definitions:
+  LoginCredentials:
+    type: 'object'
+    properties:
+      email:
+        type: 'string'
+      password:
+        type: 'string'
+
+    required:
+      - email
+      - password
+
+  LoginResponse:
+    type: 'object'
+    properties:
+      token:
+        type: 'string'
+      message:
+        type: 'string'
+      status:
+        type: 'string'

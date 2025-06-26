@@ -9,7 +9,9 @@ Flask==3.1.1
 Flask-Caching==2.3.1
 Flask-Limiter==3.11.0
 flask-marshmallow==1.3.0
+flask-swagger==0.2.14
 Flask-SQLAlchemy==3.1.1
+flask_swagger_ui==5.21.0
 importlib_metadata==8.7.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
@@ -26,6 +28,7 @@ pyasn1==0.6.1
 Pygments==2.19.1
 python-dotenv==1.1.0
 python-jose==3.5.0
+PyYAML==6.0.2
 redis==6.2.0
 rich==13.9.4
 rsa==4.9.1

@@ -3,7 +3,7 @@
 swagger: '2.0'
 info:
   title: 'Mechanic Shop API'
-  description: 'Built from scratch API for a mechanic shop'
+  description: 'API for a ficticious Mechanic Shop, built entirely from scratch'
   version: '1.0.0'
 host: '127.0.0.1:5000'
 schemes:
@@ -12,6 +12,13 @@ consumes:
   - 'application/json'
 produces:
   - 'application/json'
+
+securityDefinitions:
+  bearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+
 paths:
   /customers/login:
     post:
@@ -32,6 +39,76 @@ paths:
           schema:
             $ref: '#/definitions/LoginResponse'
 
+  /customers: #endpoint
+    post: #Post request
+      tags:
+        - Customers
+      summary: 'Endpoint to create/register a new customer'
+      description: 'Endpoint to create a new customer in our system, emails must be unique.'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to create a new Customer.'
+          required: true
+          schema:
+            $ref: '#/definitions/CreateCustomerPayload'
+      responses:
+        201:
+          description: 'Successfull Customer Creation'
+          schema:
+            $ref: '#/definitions/CreateCustomerResponse'
+          examples:
+            application/json:
+              id: 1
+              name: John Doe
+              email: johnd@email.com
+              phone: 123-456-7890
+              password: password123
+
+    get:
+      tags:
+        - Customers
+      summary: 'Returns all Customers'
+      description: 'Endpoint to retrieve a list of all customers.'
+      responses:
+        200:
+          description: 'Retrieved Customers Successfully'
+          schema:
+            $ref: '#/definitions/AllCustomers'
+
+  /customers/{id}:
+    put:
+      tags:
+        - Customers
+      summary: 'Endpoint to update a customer'
+      description: 'Endpoint to update a customer, this is a token authenticated route, and the user must be logged in to update their account.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: 'path'
+          name: 'id'
+          description: 'Customer ID'
+          required: true
+          type: 'integer'
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to update a Customer'
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateCustomerPayload'
+      responses:
+        200:
+          description: 'Successfully Updated customer'
+          schema:
+            $ref: '#/definitions/UpdateCustomerResponse'
+          examples:
+            application/json:
+              id: 1
+              name: 'John Doe Updated'
+              email: 'johndoe_updated@email.com'
+              phone: '123-456-7890'
+              password: 'newpassword123'
+
 definitions:
   LoginCredentials:
     type: 'object'
@@ -40,7 +117,6 @@ definitions:
         type: 'string'
       password:
         type: 'string'
-
     required:
       - email
       - password
@@ -53,4 +129,84 @@ definitions:
       message:
         type: 'string'
       status:
+        type: 'string'
+
+  CreateCustomerPayload:
+    type: 'object'
+    properties:
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      phone:
+        type: 'string'
+        format: 'string'
+      password:
+        type: 'string'
+    required:
+      - name
+      - email
+      - phone
+      - password
+
+  CreateCustomerResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      phone:
+        type: 'string'
+      password:
+        type: 'string'
+
+  AllCustomers:
+    type: 'array'
+    items:
+      type: 'object'
+      properties:
+        id:
+          type: 'integer'
+        name:
+          type: 'string'
+        email:
+          type: 'string'
+        phone:
+          type: 'string'
+        password:
+          type: 'string'
+
+  UpdateCustomerPayload:
+    type: 'object'
+    properties:
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      phone:
+        type: 'string'
+      password:
+        type: 'string'
+
+    required:
+      - name
+      - email
+      - phone
+      - password
+
+  UpdateCustomerResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      phone:
+        type: 'string'
+      password:
         type: 'string'

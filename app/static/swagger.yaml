@@ -39,8 +39,8 @@ paths:
           schema:
             $ref: '#/definitions/LoginResponse'
 
-  /customers: #endpoint
-    post: #Post request
+  /customers:
+    post:
       tags:
         - Customers
       summary: 'Endpoint to create/register a new customer'
@@ -76,7 +76,6 @@ paths:
           schema:
             $ref: '#/definitions/AllCustomers'
 
-  /customers/{id}:
     put:
       tags:
         - Customers
@@ -85,11 +84,11 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - in: 'path'
-          name: 'id'
-          description: 'Customer ID'
-          required: true
-          type: 'integer'
+        # - in: 'path'
+        #   name: 'id'
+        #   description: 'Customer ID'
+        #   required: true
+        #   type: 'integer'
         - in: 'body'
           name: 'body'
           description: 'Information required to update a Customer'
@@ -108,6 +107,22 @@ paths:
               email: 'johndoe_updated@email.com'
               phone: '123-456-7890'
               password: 'newpassword123'
+
+    delete:
+      tags:
+        - Customers
+      summary: 'Enpoint to delete a customer'
+      description: 'Endpoint to delete a customer. Requires token authentication, customer must be logged in to delete their account.'
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: 'Successfully Deleted customer'
+          schema:
+            $ref: '#/definitions/DeleteCustomerResponse'
+          examples:
+            application/json:
+              message: 'Successfully deleted user <customer_id>'
 
 definitions:
   LoginCredentials:
@@ -209,4 +224,10 @@ definitions:
       phone:
         type: 'string'
       password:
+        type: 'string'
+
+  DeleteCustomerResponse:
+    type: 'object'
+    properties:
+      message:
         type: 'string'

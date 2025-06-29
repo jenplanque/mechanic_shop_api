@@ -18,87 +18,114 @@ securityDefinitions:
     name: Authorization
     in: header
 
-########
+# ------------------------
 paths:
-  ########
   # ------------------------
   # Customer Paths
   # ------------------------
-  /customers:
-    post:
-      tags: [Customers]
-      summary: Create a new customer
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/CreateCustomerPayload'
-      responses:
-        201:
-          description: Customer created
-
-    get:
-      tags: [Customers]
-      summary: Get all customers
-      responses:
-        200:
-          description: Retrieved customer list
-
-  /customers/{id}:
-    get:
-      tags: [Customers]
-      summary: Get customer by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Customer found
-
-    put:
-      tags: [Customers]
-      summary: Update current customer
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: integer
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/UpdateCustomerPayload'
-      responses:
-        200:
-          description: Customer updated
-
-    delete:
-      tags: [Customers]
-      summary: Delete current customer
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Customer deleted
-
   /customers/login:
     post:
       tags: [Customers]
-      summary: Login
+      summary: Customer Login (generates token)
+      description: Validates customer credentials, generates and return a customer-specific token.
       parameters:
         - in: body
           name: body
+          description: Login Credentials
           required: true
           schema:
             $ref: '#/definitions/LoginCredentials'
       responses:
         200:
-          description: Token returned
+          description: Customer Login Successful; Token returned
+          schema:
+            $ref: '#/definitions/LoginResponse'
+          examples:
+            application/json:
+              token: your_jwt_token_here
+              message: Login successful
+              status: success
+
+  /customers:
+    post:
+      tags: [Customers]
+      summary: Endpoint to create/register a new customer
+      description: 'Endpoint to create a new customer in our system, emails must be unique.'
+      parameters:
+        - in: body
+          name: body
+          description: Information required to create a new Customer
+          required: true
+          schema:
+            $ref: '#/definitions/CreateCustomerPayload'
+      responses:
+        201:
+          description: Customer created successfully
+          schema:
+            $ref: '#/definitions/CreateCustomerResponse'
+          examples:
+            application/json:
+              id: 1
+              name: John Doe
+              email: jonnydoe@example.com
+              password: securepassword
+
+    get:
+      tags: [Customers]
+      summary: Returns list of all customers
+      description: Endpoint to retrieve a list of all customers
+      responses:
+        200:
+          description: Retrieved customer list successfully
+          schema:
+            $ref: '#/definitions/AllCustomers'
+          examples:
+            application/json:
+              - id: 1
+                name: John Doe
+                email: jonnydoe@example.com
+                password: securepassword
+
+    put:
+      tags: [Customers]
+      summary: Update customer details (login required)
+      description: Endpoint to update a customer; this is a token authenticated route, and the customer must be logged in to update their account.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          description: Information required to update a Customer
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateCustomerPayload'
+      responses:
+        200:
+          description: Successfully Updated Customer
+          schema:
+            $ref: '#/definitions/UpdateCustomerResponse'
+          examples:
+            application/json:
+              id: 1
+              name: John Doe Updated
+              email: johnnydoe_updated@example.com
+              phone: 123-456-7890
+              password: newpassword123
+
+    delete:
+      tags: [Customers]
+      summary: Delete Customer (login required)
+      description: Endpoint to delete a customer; requires token authentication, customer must be logged in to delete their account.
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Successfully Deleted Customer
+          schema:
+            $ref: '#/definitions/DeleteCustomerResponse'
+          examples:
+            application/json:
+              message: Customer <id> deleted successfully
 
   # ------------------------
   # Mechanic Paths
@@ -106,53 +133,97 @@ paths:
   /mechanics:
     post:
       tags: [Mechanics]
-      summary: Create mechanic
+      summary: Endpoint to create a new mechanic
+      description: Endpoint to create a new mechanic in our system, emails must be unique.
       parameters:
         - in: body
           name: body
+          description: Information required to create a new Mechanic
           required: true
           schema:
             $ref: '#/definitions/CreateMechanicPayload'
       responses:
         201:
-          description: Mechanic created
+          description: Mechanic created successfully
+          schema:
+            $ref: '#/definitions/MechanicResponse'
+          examples:
+            application/json:
+              email: jane.mechanic@example.com
+              id: 1
+              name: Jane Mechanic
+              phone: 123-456-7890
+              salary: 55000.00
 
     get:
       tags: [Mechanics]
-      summary: List mechanics
+      summary: Returns list of all mechanics
+      description: Endpoint to retrieve a list of all mechanics.
       responses:
         200:
-          description: Retrieved mechanic list
+          description: Retrieved mechanic list successfully
+          schema:
+            $ref: '#/definitions/AllMechanics'
+          examples:
+            application/json:
+              email: jane.mechanic@example.com
+              id: 1
+              name: Jane Mechanic
+              phone: 123-456-7890
+              salary: '50000.00'
 
   /mechanics/{id}:
     get:
       tags: [Mechanics]
       summary: Get mechanic by ID
+      description: Retrieve detailed information about a specific mechanic using their unique ID.
       parameters:
         - in: path
           name: id
+          description: Mechanic's unique ID
           required: true
           type: integer
       responses:
         200:
           description: Mechanic found
+          schema:
+            $ref: '#/definitions/MechanicResponse'
+          examples:
+            application/json:
+              email: jane.mechanic@example.com
+              id: 1
+              name: Jane Mechanic
+              phone: 123-456-7890
+              salary: '50000.00'
 
     put:
       tags: [Mechanics]
-      summary: Update mechanic
+      summary: Update mechanic details
+      description: Update details of an existing mechanic using their unique ID.
       parameters:
         - in: path
           name: id
+          description: Mechanic's unique ID
           required: true
           type: integer
         - in: body
           name: body
+          description: Information required to update a Mechanic
           required: true
           schema:
             $ref: '#/definitions/UpdateMechanicPayload'
       responses:
         200:
-          description: Mechanic updated
+          description: Successfully Updated Mechanic
+          schema:
+            $ref: '#/definitions/MechanicResponse'
+          examples:
+            application/json:
+              email: jane.mechanic@example.com
+              id: 1
+              name: Jane Mechanic
+              phone: 123-456-7890
+              salary: '50000.00'
 
     delete:
       tags: [Mechanics]
@@ -253,14 +324,16 @@ paths:
 
   /service_tickets/my-tickets:
     get:
-      tags: [Service Tickets]
+      tags:
+        - Service Tickets
+        - Customers
       summary: Get all service tickets for the logged-in customer
       description: Returns a list of service tickets that belong to the authenticated customer.
       security:
         - bearerAuth: []
       responses:
         200:
-          description: List of service tickets
+          description: List of customer service tickets
           schema:
             type: array
             items:
@@ -424,9 +497,8 @@ paths:
         200:
           description: Item deleted
 
-##############
+# ------------------------
 definitions:
-  ##############
   # ------------------------
   # Customer Definitions
   # ------------------------
@@ -495,7 +567,15 @@ definitions:
     required: [name, email, phone, password]
 
   UpdateCustomerResponse:
-    $ref: '#/definitions/CreateCustomerResponse'
+    type: object
+    properties:
+      $ref: '#/definitions/CreateCustomerResponse'
+
+  DeleteCustomerResponse:
+    type: object
+    properties:
+      message:
+        type: string
 
   # ------------------------
   # Mechanic Definitions

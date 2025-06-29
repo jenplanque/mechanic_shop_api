@@ -61,6 +61,8 @@ def get_my_tickets(current_customer_id):
     if not current_customer_id:
         return jsonify({"error": "Customer not found"}), 404
     result = db.session.execute(query).scalars().all()
+    if not result:
+        return jsonify({"message": "No open service tickets found for this customer."}), 200
     return service_tickets_schema.jsonify(result), 200
 
 

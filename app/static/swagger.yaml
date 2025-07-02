@@ -76,7 +76,7 @@ paths:
       description: Endpoint to retrieve a list of all customers
       responses:
         200:
-          description: Retrieved customer list successfully
+          description: Successfully retrieved customer list
           schema:
             $ref: '#/definitions/AllCustomers'
           examples:
@@ -133,7 +133,7 @@ paths:
   /mechanics:
     post:
       tags: [Mechanics]
-      summary: Endpoint to create a new mechanic
+      summary: Add new mechanic
       description: Endpoint to create a new mechanic in our system, emails must be unique.
       parameters:
         - in: body
@@ -163,14 +163,14 @@ paths:
         200:
           description: Retrieved mechanic list successfully
           schema:
-            $ref: '#/definitions/AllMechanics'
+            $ref: '#/definitions/MechanicList'
           examples:
             application/json:
-              email: jane.mechanic@example.com
-              id: 1
-              name: Jane Mechanic
-              phone: 123-456-7890
-              salary: '50000.00'
+              - email: jane.mechanic@example.com
+                id: 1
+                name: Jane Mechanic
+                phone: 123-456-7890
+                salary: 50000.00
 
   /mechanics/{id}:
     get:
@@ -227,36 +227,65 @@ paths:
 
     delete:
       tags: [Mechanics]
-      summary: Delete mechanic
+      summary: Delete Mechanic by ID
+      description: Delete a mechanic from the system using their unique ID.
       parameters:
         - in: path
           name: id
+          description: Mechanic's unique ID
           required: true
           type: integer
       responses:
         200:
-          description: Mechanic deleted
+          description: Successfully deleted Mechanic
+          schema:
+            $ref: '#/definitions/MechanicResponse'
+          examples:
+            application/json:
+              message: Mechanic id <> deleted successfully
 
   /mechanics/search:
     get:
       tags: [Mechanics]
-      summary: Search mechanic by name
+      summary: Search Mechanic by name
+      description: Endpoint to search for a mechanic using their name.
       parameters:
         - in: query
           name: name
+          description: Full or partial name of mechanic to search for
           type: string
           required: true
       responses:
         200:
           description: Search results
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/MechanicResponse'
+          examples:
+            application/json:
+              email: jane.mechanic@example.com
+              id: 1
+              name: Jane Mechanic
+              phone: 123-456-7890
+              salary: '50000.00'
 
   /mechanics/usage:
     get:
       tags: [Mechanics]
       summary: Mechanic usage stats
+      description: Returns statistics about mechanic usage, by frequency of service tickets assigned.
       responses:
         200:
-          description: Stats returned
+          description: Mechanic usage stats returned
+          examples:
+            application/json:
+              - mechanic_id: 1
+                name: Jane Mechanic
+                ticket_count: 5
+              - mechanic_id: 2
+                name: John Smith
+                ticket_count: 3
 
   # ------------------------
   # Service Ticket Paths
@@ -265,68 +294,144 @@ paths:
     post:
       tags: [Service Tickets]
       summary: Create service ticket
+      description: Endpoint to create a new service ticket for a customer.
       parameters:
         - in: body
           name: body
+          description: Information required to create a new Service Ticket
           required: true
           schema:
             $ref: '#/definitions/CreateServiceTicketPayload'
       responses:
         201:
-          description: Ticket created
+          description: Successfully created service ticket
+          schema:
+            $ref: '#/definitions/ServiceTicketResponse'
+          examples:
+            application/json:
+              VIN: '1HGCM82633A123456'
+              customer:
+                email: john.doe@example.com
+                id: 1
+                name: John Doe
+                phone: '123-456-7890'
+              customer_id: 1
+              ticket_id: 4
+              mechanics: []
+              service_date: '2025-10-01'
+              service_desc: 'Oil change and tire rotation'
 
     get:
       tags: [Service Tickets]
-      summary: Get all tickets
+      summary: Get all service tickets
+      description: Endpoint to retrieve a list of all service tickets.
       responses:
         200:
-          description: Tickets retrieved
+          description: Successfully retrieved Service Ticket list
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ServiceTicketResponse'
+          examples:
+            application/json:
+              - VIN: '1HGCM82633A123456'
+                customer_info:
+                  id: 1
+                  name: John Doe
+                  email: 'john.doe@example.com'
+                  phone: '123-456-7890'
+                ticket_id: 4
+                mechanics: []
+                service_date: '2025-10-01'
+                service_desc: 'Oil change and tire rotation'
 
   /service_tickets/{id}:
     get:
       tags: [Service Tickets]
-      summary: Get ticket by ID
+      summary: Get Service Ticket by ID
+      description: Retrieve detailed information about a specific service ticket using its unique ID.
       parameters:
         - in: path
           name: id
-          type: integer
+          description: Service Ticket's unique ID
           required: true
+          type: integer
       responses:
         200:
-          description: Ticket details
+          description: Service Ticket details
+          schema:
+            $ref: '#/definitions/ServiceTicketResponse'
+          examples:
+            application/json:
+              VIN: '1HGCM82633A123456'
+              customer_info:
+                email: 'john.doe@example.com'
+                id: 1
+                name: John Doe
+                phone: 123-456-7890
+              ticket_id: 4
+              mechanics: []
+              service_date: '2025-10-01'
+              service_desc: 'Oil change and tire rotation'
 
-    put:
+    delete:
       tags: [Service Tickets]
-      summary: Update ticket
+      summary: Delete Service ticket
+      description: Delete service ticket using its unique ID.
       parameters:
         - in: path
           name: id
+          description: Service Ticket's unique ID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Successfully deleted Service Ticket
+          examples:
+            application/json:
+              message: Service Ticket <id> deleted successfully
+
+  /service_tickets/{id}/edit:
+    put:
+      tags: [Service Tickets]
+      summary: Update Service Ticket
+      description: Add/Remove Mechanic details of an existing service ticket using its unique ID.
+      parameters:
+        - in: path
+          name: id
+          description: Service Ticket's unique ID
           required: true
           type: integer
         - in: body
           name: body
+          description: Information required to add/remove Mechanic(s) from a Service Ticket
           required: true
+          schema:
+            $ref: '#/definitions/UpdateServiceTicketPayload'
       responses:
         200:
-          description: Ticket updated
-
-    delete:
-      tags: [Service Tickets]
-      summary: Delete ticket
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Ticket deleted
+          description: Successfully Updated Service Ticket
+          schema:
+            $ref: '#/definitions/UpdateServiceTicketResponse'
+          examples:
+            application/json:
+              service_ticket:
+                VIN: '1HGCM82633A123456'
+                customer_info:
+                  email: 'john.doe@example.com'
+                  id: 1
+                  name: John Doe
+                  phone: '123-456-7890'
+              ticket_id: 4
+              mechanics:
+                - id: 1
+                  name: Jane Mechanic
+              service_date: '2025-10-01'
+              service_desc: 'Oil change and tire rotation'
 
   /service_tickets/my-tickets:
     get:
-      tags:
-        - Service Tickets
-        - Customers
+      tags: [Customers]
       summary: Get all service tickets for the logged-in customer
       description: Returns a list of service tickets that belong to the authenticated customer.
       security:
@@ -349,87 +454,159 @@ paths:
       parameters:
         - in: path
           name: service_ticket_id
-          type: integer
+          description: Service Ticket's unique ID
           required: true
+          type: integer
         - in: path
           name: mechanic_id
-          type: integer
+          description: Mechanic's unique ID to assign
           required: true
+          type: integer
       responses:
         200:
-          description: Mechanic successfully added
+          description: Successfully added mechanic to service ticket
           schema:
-            $ref: '#/definitions/ServiceTicketResponse'
-        400:
-          description: Mechanic already assigned
-        404:
-          description: Ticket or mechanic not found
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Mechanic 'Jane Doe' successfully added to Service Ticket 2
 
   /service_tickets/{service_ticket_id}/remove-mechanic/{mechanic_id}:
-    delete:
+    put:
       tags: [Service Tickets]
       summary: Remove a mechanic from a service ticket
-      description: Removes the mechanic from the list of assigned mechanics.
+      description: Removes the specified mechanic from the list of assigned mechanics.
       parameters:
         - in: path
           name: service_ticket_id
-          type: integer
+          description: Service Ticket's unique ID
           required: true
+          type: integer
         - in: path
           name: mechanic_id
-          type: integer
+          description: Mechanic's unique ID to remove
           required: true
+          type: integer
       responses:
         200:
           description: Mechanic successfully removed
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Mechanic 'Jane Doe' removed from Service Ticket 2
         400:
           description: Mechanic was not assigned
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Mechanic 'Jane Doe' not assigned to this Service Ticket.
         404:
           description: Ticket or mechanic not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Service Ticket/Mechanic not found
 
   /service_tickets/{service_ticket_id}/assign-item/{item_id}:
     put:
-      tags: [Inventory]
+      tags: [Service Tickets]
       summary: Assign inventory item to a service ticket
-      description: Adds an inventory item (like a part) to the ticket.
+      description: Adds an inventory item/part to the specified service ticket.
       parameters:
         - in: path
           name: service_ticket_id
-          type: integer
+          description: Service Ticket's unique ID
           required: true
+          type: integer
         - in: path
           name: item_id
-          type: integer
+          description: Inventory item's unique ID to assign
           required: true
+          type: integer
       responses:
         200:
-          description: Inventory item assigned
+          description: Inventory item successfully added
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Oil Filter successfully added to Ticket 2'
         400:
           description: Item already assigned
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Oil Filter already assigned to Ticket.'
         404:
-          description: Ticket or item not found
+          description: Ticket or Inventory item not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Ticket/Inventory Item not found
 
   /service_tickets/{service_ticket_id}/remove-item/{item_id}:
-    delete:
-      tags: [Inventory]
+    put:
+      tags: [Service Tickets]
       summary: Remove inventory item from a service ticket
-      description: Removes a part from the specified service ticket.
+      description: Removes an inventory item/part from the specified service ticket.
       parameters:
         - in: path
           name: service_ticket_id
-          type: integer
+          description: Service Ticket's unique ID
           required: true
+          type: integer
         - in: path
           name: item_id
-          type: integer
+          description: Inventory item's unique ID to remove
           required: true
+          type: integer
       responses:
         200:
-          description: Inventory item removed
+          description: Inventory item successfully removed
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Oil Filter successfully removed from Service Ticket 2'
         400:
-          description: Item was not assigned
+          description: Item not assigned
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Oil Filter not assigned to this Service Ticket.'
         404:
-          description: Ticket or item not found
+          description: Ticket or Inventory item not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Ticket/Inventory Item not found
 
   # ------------------------
   # Inventory Paths
@@ -438,64 +615,150 @@ paths:
     post:
       tags: [Inventory]
       summary: Add inventory item
+      description: Endpoint to add a new inventory item/part to the system.
       parameters:
         - in: body
           name: body
+          description: Information required to create a new Inventory Item
           required: true
           schema:
             $ref: '#/definitions/CreateInventoryItemPayload'
       responses:
         201:
-          description: Item added
+          description: Successfully added inventory item
+          schema:
+            $ref: '#/definitions/InventoryItemResponse'
+          examples:
+            application/json:
+              id: 1
+              name: Oil Filter
+              price: 19.99
+        400:
+          description: Duplicate item
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Item already exists in inventory.'
 
     get:
       tags: [Inventory]
-      summary: Get all inventory items
+      summary: Returns list of all inventory items
+      description: Endpoint to retrieve a list of all inventory items.
       responses:
         200:
           description: Items retrieved
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/InventoryItemResponse'
+            example:
+              application/json:
+                - id: 1
+                  name: Oil Filter
+                  price: 19.99
+                - id: 2
+                  name: Spark Plug
+                  price: 5.49
 
   /inventory/{id}:
     get:
       tags: [Inventory]
-      summary: Get item by ID
+      summary: Get inventory item by ID
+      description: Retrieve detailed information about a specific inventory item using its unique ID.
       parameters:
         - in: path
           name: id
+          description: Inventory item's unique ID
           required: true
           type: integer
       responses:
         200:
           description: Item found
+          schema:
+            $ref: '#/definitions/InventoryItemResponse'
+          examples:
+            application/json:
+              id: 1
+              name: Oil Filter
+              price: 19.99
+        404:
+          description: Item not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Inventory item not found.'
 
     put:
       tags: [Inventory]
-      summary: Update item
+      summary: Update inventory item details
+      description: Update an existing inventory item by its unique ID.
       parameters:
         - in: path
           name: id
-          type: integer
+          description: Inventory item's unique ID
           required: true
+          type: integer
         - in: body
           name: body
+          description: Information required to update an Inventory Item
           required: true
           schema:
             $ref: '#/definitions/UpdateInventoryItemPayload'
       responses:
         200:
-          description: Item updated
+          description: Item  details updated
+          schema:
+            $ref: '#/definitions/InventoryItemResponse'
+          examples:
+            application/json:
+              id: 1
+              name: Oil Filter
+              price: 21.99
+        404:
+          description: Item not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Inventory item not found.'
 
     delete:
       tags: [Inventory]
-      summary: Delete item
+      summary: Delete inventory item by ID
+      description: Delete an inventory item using its unique ID.
       parameters:
         - in: path
           name: id
+          description: Inventory item's unique ID
           required: true
           type: integer
       responses:
         200:
-          description: Item deleted
+          description: Successfully deleted inventory item
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Inventory item <id> deleted successfully'
+        404:
+          description: Item not found
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: 'Inventory item not found.'
 
 # ------------------------
 definitions:
@@ -567,9 +830,7 @@ definitions:
     required: [name, email, phone, password]
 
   UpdateCustomerResponse:
-    type: object
-    properties:
-      $ref: '#/definitions/CreateCustomerResponse'
+    $ref: '#/definitions/CreateCustomerResponse'
 
   DeleteCustomerResponse:
     type: object
@@ -609,6 +870,19 @@ definitions:
         type: string
       salary:
         type: number
+
+  MechanicUpdateResponse:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+
+        # mechanics:
+        # type: array
+        # items:
+        #   $ref: '#/definitions/MechanicResponse'
 
   MechanicList:
     type: array
@@ -653,6 +927,74 @@ definitions:
         type: array
         items:
           type: integer
+
+  UpdateServiceTicketPayload:
+    type: object
+    properties:
+      add_mechanic_ids:
+        type: array
+        items:
+          type: integer
+      remove_mechanic_ids:
+        type: array
+        items:
+          type: integer
+
+  UpdateServiceTicketResponse:
+    type: array
+    properties:
+      mechanics:
+        type: integer
+    # mechanics:
+    #     type: array
+    #     items:
+    #       $ref: '#/definitions/MechanicUpdateResponse'
+
+    # items:
+    #   $ref: '#/definitions/ServiceTicketResponse'
+    # properties:
+    #   ticket_id:
+    #     type: integer
+    #   VIN:
+    #     type: string
+    #   customer_info:
+    #     $ref: '#/definitions/CreateCustomerResponse'
+    #   mechanics:
+    #     type: array
+    #     items:
+    #       $ref: '#/definitions/MechanicResponse'
+    #   service_date:
+    #     type: string
+    #     format: date
+    #   service_desc:
+    #     type: string
+
+  CreateServiceTicketResponse:
+    type: object
+    properties:
+      ticket_id:
+        type: integer
+      VIN:
+        type: string
+      customer_info:
+        $ref: '#/definitions/CreateCustomerResponse'
+      mechanics:
+        type: array
+        items:
+          $ref: '#/definitions/MechanicResponse'
+      service_date:
+        type: string
+        format: date
+      service_desc:
+        type: string
+
+  AddMechanicToServiceTicketResponse:
+    type: object
+    properties:
+      # service_ticket:
+      #   $ref: '#/definitions/ServiceTicketResponse'
+      message:
+        type: string
 
   # ------------------------
   # Inventory Definitions

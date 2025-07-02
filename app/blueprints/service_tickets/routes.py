@@ -62,7 +62,10 @@ def get_my_tickets(current_customer_id):
         return jsonify({"error": "Customer not found"}), 404
     result = db.session.execute(query).scalars().all()
     if not result:
-        return jsonify({"message": "No open service tickets found for this customer."}), 200
+        return (
+            jsonify({"message": "No open service tickets found for this customer."}),
+            200,
+        )
     return service_tickets_schema.jsonify(result), 200
 
 
@@ -84,7 +87,14 @@ def add_mechanic_to_service_ticket(service_ticket_id, mechanic_id):
     if mechanic not in service_ticket.mechanics:
         service_ticket.mechanics.append(mechanic)
         db.session.commit()
-        return service_ticket_schema.jsonify(service_ticket), 200
+        return (
+            jsonify(
+                {
+                    "message": f"Mechanic: '{mechanic.name}' assigned to Service Ticket {service_ticket_id}"
+                }
+            ),
+            200,
+        )
     else:
         return (
             jsonify(
@@ -151,14 +161,17 @@ def add_item_to_service_ticket(service_ticket_id, item_id):
     if inventory_item not in service_ticket.inventory_items:
         service_ticket.inventory_items.append(inventory_item)
         db.session.commit()
-        return jsonify({"message": f"'{inventory_item.name}' successfully added to Ticket #{service_ticket_id}"}), 200
-    else:
         return (
             jsonify(
                 {
-                    "message": f"'{inventory_item.name}' already assigned to Ticket"
+                    "message": f"'{inventory_item.name}' successfully added to Ticket #{service_ticket_id}"
                 }
             ),
+            200,
+        )
+    else:
+        return (
+            jsonify({"message": f"'{inventory_item.name}' already assigned to Ticket"}),
             400,
         )
 

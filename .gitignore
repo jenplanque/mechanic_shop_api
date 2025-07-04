@@ -4,4 +4,3 @@
 /archives
 .env
 .DS_Store
-app/blueprints/customers/__pycache__

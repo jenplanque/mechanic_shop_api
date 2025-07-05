@@ -21,6 +21,11 @@ class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
         )
         include_fk = True  # Include foreign keys in the schema
 
+    # Explicitly define required fields for better validation
+    VIN = fields.String(required=True)
+    service_desc = fields.String(required=True)
+    service_date = fields.Date(required=True)
+
 
 class EditServiceTicketSchema(ma.Schema):
     add_mechanic_ids = fields.List(fields.Int(), required=True)

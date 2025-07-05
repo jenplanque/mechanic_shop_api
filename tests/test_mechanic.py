@@ -23,6 +23,21 @@ class TestMechanic(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json["name"], "John Doe")
 
+
+    def test_invalid_creation(self):
+        mechanic_payload = {
+            "name": "John Doe",
+            "phone": "123-456-7890",
+            "salary": 50000.00,
+        }
+        print("Payload being sent:", mechanic_payload)
+        response = self.client.post("/mechanics/", json=mechanic_payload)
+        print("Response status code:", response.status_code)
+        print("Response JSON:", response.json)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["email"], ["Missing data for required field."])
+
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()

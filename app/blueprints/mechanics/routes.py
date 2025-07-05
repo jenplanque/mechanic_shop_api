@@ -12,17 +12,16 @@ from . import mechanics_bp
 @cache.cached(timeout=30)  # Cache for 30 seconds to reduce database load
 def create_mechanic():
     try:
-        mechanic_data = mechanic_schema.load(request.json)
+        new_mechanic = mechanic_schema.load(request.json)
 
     except ValidationError as e:
         return jsonify(e.messages), 400
 
-    query = select(Mechanic).where(Mechanic.email == mechanic_data["email"])
+    query = select(Mechanic).where(Mechanic.email == new_mechanic.email)
     existing_mechanic = db.session.execute(query).scalars().all()
     if existing_mechanic:
         return jsonify({"error": "Email already exists"}), 400
 
-    new_mechanic = Mechanic(**mechanic_data)
     db.session.add(new_mechanic)
     db.session.commit()
     return mechanic_schema.jsonify(new_mechanic), 201
@@ -70,19 +69,22 @@ def update_mechanic(mechanic_id):
         return jsonify({"error": "Mechanic not found."}), 404
 
     try:
-        mechanic_data = mechanic_schema.load(request.json)
+        updated_mechanic = mechanic_schema.load(request.json)
     except ValidationError as e:
         return jsonify(e.messages), 400
 
     # if new email, verify does not already exist in DB
-    if mechanic_data.get("email") != mechanic.email:
-        query = select(Mechanic).where(Mechanic.email == mechanic_data["email"])
+    if updated_mechanic.email != mechanic.email:
+        query = select(Mechanic).where(Mechanic.email == updated_mechanic.email)
         existing_mechanic = db.session.execute(query).scalars().first()
         if existing_mechanic:
             return jsonify({"error": "Email already exists"}), 400
 
-    for key, value in mechanic_data.items():
-        setattr(mechanic, key, value)
+    # Update the existing mechanic with new values
+    mechanic.name = updated_mechanic.name
+    mechanic.email = updated_mechanic.email
+    mechanic.phone = updated_mechanic.phone
+    mechanic.salary = updated_mechanic.salary
 
     db.session.commit()
     return mechanic_schema.jsonify(mechanic), 200

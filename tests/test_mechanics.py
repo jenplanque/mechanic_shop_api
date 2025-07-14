@@ -116,6 +116,23 @@ def test_update_mechanic_invalid_id(client):
     assert response.status_code == 404
     assert "not found" in response.json.get("error", "").lower()
 
+def test_update_mechanic_duplicate_email(client):
+    res1 = client.post("/mechanics/", json=create_test_mechanic())
+    # Create a second mechanic with a different email to avoid duplicate creation error
+    second_mechanic = create_test_mechanic()
+    second_mechanic["email"] = "jane2@fixit.com"
+    res2 = client.post("/mechanics/", json=second_mechanic)
+    mechanic_id = res1.json["id"]
+    update_data = {
+        "name": "Updated Mechanic",
+        "email": res2.json["email"],  # Use the email of the second mechanic
+        "phone": "555-9999",
+        "salary": 70000,
+    }
+    response = client.put(f"/mechanics/{mechanic_id}", json=update_data)
+    assert response.status_code == 400
+    assert "email already exists" in response.json.get("error", "").lower()
+
 
 # DELETE MECHANIC TESTS
 def test_delete_mechanic(client):

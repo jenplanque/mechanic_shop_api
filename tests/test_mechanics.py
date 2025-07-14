@@ -116,6 +116,7 @@ def test_update_mechanic_invalid_id(client):
     assert response.status_code == 404
     assert "not found" in response.json.get("error", "").lower()
 
+
 def test_update_mechanic_duplicate_email(client):
     res1 = client.post("/mechanics/", json=create_test_mechanic())
     # Create a second mechanic with a different email to avoid duplicate creation error

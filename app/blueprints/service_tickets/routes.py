@@ -16,20 +16,96 @@ from . import service_tickets_bp
 # ADD SERVICE TICKET
 @service_tickets_bp.route("/", methods=["POST"])
 def create_service_ticket():
-    try:
-        service_ticket_data = service_ticket_schema.load(request.json)
+    data = request.get_json()
 
+    # Validate input
+    try:
+        validated_data = service_ticket_schema.load(data)
     except ValidationError as e:
         return jsonify(e.messages), 400
 
-    customer_id = service_ticket_data.get("customer_id")
-    if not customer_id or not db.session.get(Customer, customer_id):
+    # Access model attributes
+    customer_id = validated_data.customer_id
+    VIN = validated_data.VIN
+    service_date = validated_data.service_date
+    service_desc = validated_data.service_desc
+
+    # Check for valid customer
+    customer = db.session.get(Customer, customer_id)
+    if not customer:
         return jsonify({"error": "Customer not found"}), 404
 
-    new_service_ticket = ServiceTicket(**service_ticket_data)
-    db.session.add(new_service_ticket)
+    # Create and save new ticket
+    new_ticket = ServiceTicket(
+        VIN=VIN,
+        service_date=service_date,
+        service_desc=service_desc,
+        customer_id=customer_id,
+    )
+    db.session.add(new_ticket)
     db.session.commit()
-    return service_ticket_schema.jsonify(new_service_ticket), 201
+
+    return service_ticket_schema.jsonify(new_ticket), 201
+
+
+# @service_tickets_bp.route("/", methods=["POST"])
+# def create_service_ticket():
+#     data = request.get_json()
+
+#     # Validate input
+#     try:
+#         validated_data = service_ticket_schema.load(data)
+#     except ValidationError as e:
+#         return jsonify(e.messages), 400
+
+#     customer_id = validated_data.get("customer_id")
+#     customer = db.session.get(Customer, customer_id)
+#     if not customer:
+#         return jsonify({"error": "Customer not found"}), 404
+
+#     new_ticket = ServiceTicket(
+#         VIN=validated_data["VIN"],
+#         service_desc=validated_data["service_desc"],
+#         service_date=validated_data["service_date"],
+#         customer_id=customer_id,
+#     )
+
+#     db.session.add(new_ticket)
+#     db.session.commit()
+#     return jsonify(service_ticket_schema.dump(new_ticket)), 201
+
+
+# ---
+# @service_tickets_bp.route("/", methods=["POST"])
+# def create_service_ticket():
+#     try:
+#         data = request.get_json()
+#         new_ticket = service_ticket_schema.load(data)
+#         db.session.add(new_ticket)
+#         db.session.commit()
+#         print("POST response JSON:", service_ticket_schema.jsonify(new_ticket))
+#         return service_ticket_schema.jsonify(new_ticket), 201
+#     except ValidationError as e:
+#         return jsonify(e.messages), 400
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 400
+# ---
+# @service_tickets_bp.route("/", methods=["POST"])
+# def create_service_ticket():
+#     try:
+#         service_ticket_data = service_ticket_schema.load(request.json)
+
+#     except ValidationError as e:
+#         return jsonify(e.messages), 400
+
+# customer_id = service_ticket_data.get("customer_id")
+# if not customer_id or not db.session.get(Customer, customer_id):
+#     return jsonify({"error": "Customer not found"}), 404
+
+# new_service_ticket = ServiceTicket(**service_ticket_data)
+# db.session.add(new_service_ticket)
+# db.session.commit()
+# return service_ticket_schema.jsonify(new_service_ticket), 201
 
 
 # GET ALL SERVICE TICKETS
@@ -58,8 +134,8 @@ def get_my_tickets(current_customer_id):
         ServiceTicket.customer_id == current_customer_id
     )
 
-    if not current_customer_id:
-        return jsonify({"error": "Customer not found"}), 404
+    # if not current_customer_id:
+    #     return jsonify({"error": "Customer not found"}), 404
     result = db.session.execute(query).scalars().all()
     if not result:
         return (

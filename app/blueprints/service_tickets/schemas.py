@@ -5,26 +5,73 @@ from marshmallow import fields
 
 class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
     customer_id = fields.Integer(required=True)
-    mechanics = fields.Nested("MechanicSchema", only=("id", "name"), many=True)
-    customer = fields.Nested("CustomerSchema", only=("id", "name", "email", "phone"))
+    VIN = fields.String(required=True)
+    service_desc = fields.String(required=True)
+    service_date = fields.Date(required=True)
 
     class Meta:
         model = ServiceTicket
+        include_fk = True
+        load_instance = True
         fields = (
             "id",
             "VIN",
             "service_date",
             "service_desc",
             "customer_id",
-            "customer",
             "mechanics",
         )
-        include_fk = True  # Include foreign keys in the schema
 
-    # Explicitly define required fields for better validation
-    VIN = fields.String(required=True)
-    service_desc = fields.String(required=True)
-    service_date = fields.Date(required=True)
+    mechanics = fields.Nested("MechanicSchema", only=("id", "name"), many=True)
+    customer = fields.Nested("CustomerSchema", only=("id", "name", "email", "phone"))
+
+
+# class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
+#     customer_id = fields.Int(required=True)
+#     id = fields.Int(dump_only=True)
+
+#     mechanics = fields.Nested("MechanicSchema", only=("id", "name"), many=True)
+#     customer = fields.Nested("CustomerSchema", only=("id", "name", "email", "phone"))
+
+#     class Meta:
+#         model = ServiceTicket
+#         include_fk = True
+#         fields = (
+#             "id",
+#             "VIN",
+#             "service_date",
+#             "service_desc",
+#             "customer_id",
+#             "customer",
+#             "mechanics",
+#         )
+
+#     VIN = fields.Str(required=True)
+#     service_desc = fields.Str(required=True)
+#     service_date = fields.Date(required=True)
+
+
+# class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
+#     id = fields.Int(dump_only=True)
+#     VIN = fields.String(required=True)
+#     service_desc = fields.String(required=True)
+#     service_date = fields.Date(required=True)
+#     customer_id = fields.Integer(required=True)
+#     mechanics = fields.Nested("MechanicSchema", only=("id", "name"), many=True)
+#     customer = fields.Nested("CustomerSchema", only=("id", "name", "email", "phone"))
+
+#     class Meta:
+#         model = ServiceTicket
+#         fields = (
+#             "id",
+#             "VIN",
+#             "service_date",
+#             "service_desc",
+#             "customer_id",
+#             "customer",
+#             "mechanics",
+#         )
+#         include_fk = True
 
 
 class EditServiceTicketSchema(ma.Schema):

@@ -38,8 +38,8 @@ def login_customer():
 
 # ADD CUSTOMER
 @customers_bp.route("/", methods=["POST"])
-# @cache.cached(timeout=60)  # Cache for 60 seconds to reduce database load
 def create_customer():
+    print("Checking for existing customer...")
     try:
         customer_data = customer_schema.load(request.json)
 
@@ -70,16 +70,6 @@ def get_all_customers():
         query = select(Customer)
         customers = db.session.execute(query).scalars().all()
         return customers_schema.jsonify(customers), 200
-
-
-# # GET SPECIFIC CUSTOMER
-# @customers_bp.route("/<int:customer_id>", methods=["GET"])
-# def get_customer(customer_id):
-#     customer = db.session.get(Customer, customer_id)
-
-#     if customer:
-#         return customer_schema.jsonify(customer), 200
-#     return jsonify({"error": "Customer not found"}), 404
 
 
 # UPDATE CUSTOMER

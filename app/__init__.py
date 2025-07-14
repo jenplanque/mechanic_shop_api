@@ -23,6 +23,14 @@ def create_app(config_name):
 
     # Load app configuration
     app = Flask(__name__)
+        
+    if config_name == "TestingConfig":
+        app.config.from_object("config.TestingConfig")
+    elif config_name == "DevelopmentConfig":
+        app.config.from_object("config.DevelopmentConfig")
+    else:
+        raise ValueError("Invalid config name")
+
     app.config.from_object(f"config.{config_name}")
     app.config["RATELIMIT_STORAGE_URL"] = "redis://localhost:6379"
 

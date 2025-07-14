@@ -9,18 +9,22 @@ from . import mechanics_bp
 
 # ADD MECHANIC
 @mechanics_bp.route("/", methods=["POST"])
-@cache.cached(timeout=30)  # Cache for 30 seconds to reduce database load
 def create_mechanic():
-    try:
-        new_mechanic = mechanic_schema.load(request.json)
+    print("Checking for existing mechanic...")
+    data = request.json
 
+    # Check for duplicate email FIRST
+    existing_query = select(Mechanic).where(Mechanic.email == data.get("email"))
+    existing_mechanic = db.session.execute(existing_query).scalars().first()
+    if existing_mechanic:
+        print("Duplicate found:", existing_mechanic.email)
+        return jsonify({"error": "Email already exists"}), 400
+
+    # Then load and validate the new mechanic
+    try:
+        new_mechanic = mechanic_schema.load(data)
     except ValidationError as e:
         return jsonify(e.messages), 400
-
-    query = select(Mechanic).where(Mechanic.email == new_mechanic.email)
-    existing_mechanic = db.session.execute(query).scalars().all()
-    if existing_mechanic:
-        return jsonify({"error": "Email already exists"}), 400
 
     db.session.add(new_mechanic)
     db.session.commit()

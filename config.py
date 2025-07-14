@@ -8,6 +8,8 @@ class DevelopmentConfig:
     DEBUG = True
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = 300  # Default cache timeout in seconds
+    # Rate limiter storage (suppress warning)
+    RATELIMIT_STORAGE_URL = "memory://"
 
 
 class TestingConfig:
@@ -16,6 +18,8 @@ class TestingConfig:
     DEBUG = True
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = 300
+    # Rate limiter storage (suppress warning)
+    RATELIMIT_STORAGE_URL = "memory://"
 
 
 class ProductionConfig:

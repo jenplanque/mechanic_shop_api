@@ -379,35 +379,6 @@
 					"response": []
 				},
 				{
-					"name": "Get Customer (id)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://127.0.0.1:5000/customers/3",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5000",
-							"path": [
-								"customers",
-								"3"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Customer Login",
 					"protocolProfileBehavior": {
 						"disabledSystemHeaders": {
@@ -450,51 +421,6 @@
 							"path": [
 								"customers",
 								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get My Service Tickets (login req)",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTA2NTI3MzAsImlhdCI6MTc1MDY0OTEzMCwic3ViIjoiOCJ9.wra8F_TECeCPo5TV5qjHqaoPVfAsQSOevCxZYopR4aM",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://127.0.0.1:5000/service_tickets/my-tickets",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5000",
-							"path": [
-								"service_tickets",
-								"my-tickets"
 							]
 						}
 					},
@@ -589,6 +515,51 @@
 							"port": "5000",
 							"path": [
 								"customers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Service Tickets (login req'd)",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTA2NTI3MzAsImlhdCI6MTc1MDY0OTEzMCwic3ViIjoiOCJ9.wra8F_TECeCPo5TV5qjHqaoPVfAsQSOevCxZYopR4aM",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:5000/service_tickets/my-tickets",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"service_tickets",
+								"my-tickets"
 							]
 						}
 					},
@@ -994,6 +965,40 @@
 							"path": [
 								"inventory",
 								"10"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "archives",
+			"item": [
+				{
+					"name": "Get Customer (id)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:5000/customers/3",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "5000",
+							"path": [
+								"customers",
+								"3"
 							]
 						}
 					},

@@ -207,7 +207,6 @@ def test_update_ticket_inventory(client):
 
     item_id = create_inventory_item(client)
 
-
     update_data = {"add_item_ids": [item_id], "remove_item_ids": []}
     update_res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
     assert update_res.status_code == 200

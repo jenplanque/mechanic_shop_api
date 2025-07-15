@@ -1,3 +1,4 @@
+from xml.parsers.expat import errors
 from .schemas import (
     service_ticket_schema,
     service_tickets_schema,
@@ -123,31 +124,57 @@ def edit_service_ticket(service_ticket_id):
     # Add inventory items
     for item_id in service_ticket_edits.get("add_item_ids", []):
         item = db.session.get(InventoryItem, item_id)
-        if not item:
-            return (
-                jsonify({"error": f"Inventory item: '{item_id}' not found in system"}),
-                404,
-            )
-        if item not in service_ticket.items:
-            service_ticket.items.append(item)
+    if item is None:
+        errors.append(f"Inventory item ID '{item_id}' not found in system")
+        # item = db.session.get(InventoryItem, item_id)
+    # if not item:
+        # errors.append(f"Inventory item ID '{item_id}' not found in system")
+    elif item not in service_ticket.inventory_items:
+        service_ticket.inventory_items.append(item)
+    else:
+        errors.append(f"Inventory item ID '{item_id}' already assigned to this ticket")
+    # for item_id in service_ticket_edits.get("add_item_ids", []):
+    #     item = db.session.get(InventoryItem, item_id)
+    #     if not item:
+    #         return (
+    #             jsonify({"error": f"Inventory item: '{item_id}' not found in system"}),
+    #             404,
+    #         )
+        if item not in service_ticket.inventory_items:
+            service_ticket.inventory_items.append(item)
 
     # Remove inventory items
     for item_id in service_ticket_edits.get("remove_item_ids", []):
         item = db.session.get(InventoryItem, item_id)
         if not item:
-            return (
-                jsonify({"error": f"Inventory item: '{item_id}' not found in system"}),
-                404,
-            )
-        if item in service_ticket.items:
-            service_ticket.items.remove(item)
+            errors.append(f"Inventory item ID '{item_id}' not found in system")
+        elif item in service_ticket.inventory_items:
+            service_ticket.inventory_items.remove(item)
+        else:
+            errors.append(f"Inventory item ID '{item_id}' not assigned to this ticket")
+    
+    # for item_id in service_ticket_edits.get("remove_item_ids", []):
+    #     item = db.session.get(InventoryItem, item_id)
+    #     if not item:
+    #         return (
+    #             jsonify({"error": f"Inventory item: '{item_id}' not found in system"}),
+    #             404,
+    #         )
+        if item in service_ticket.inventory_items:
+            service_ticket.inventory_items.remove(item)
 
     db.session.commit()
     return (
         jsonify(
             {
                 "message": f"Service Ticket #{service_ticket_id} updated successfully",
-                "service_ticket": service_ticket_schema.dump(service_ticket),
+                "service_ticket": {
+                    "id": service_ticket.id,
+                    "description": service_ticket.description,
+                    "mechanics": [mechanic.id for mechanic in service_ticket.mechanics],
+                    "inventory_items": [item.to_dict() for item in service_ticket.inventory_items]
+                }
+                # "service_ticket": service_ticket_schema.dump(service_ticket),
             }
         ),
         200,

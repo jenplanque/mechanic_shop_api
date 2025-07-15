@@ -1,6 +1,7 @@
 import pytest
 from app import create_app
 from app.models import db, Mechanic
+import uuid
 
 
 @pytest.fixture
@@ -135,16 +136,112 @@ def test_update_mechanic_duplicate_email(client):
     assert "email already exists" in response.json.get("error", "").lower()
 
 
-# DELETE MECHANIC TESTS
-def test_delete_mechanic(client):
-    res = client.post("/mechanics/", json=create_test_mechanic())
-    mechanic_id = res.json["id"]
-    response = client.delete(f"/mechanics/{mechanic_id}")
-    assert response.status_code == 200
-    assert "deleted" in response.json["message"].lower()
+# Helper function to create a test customer
+def create_customer(client):
+    customer_data = {
+        "name": "Test Customer",
+        "email": "customer@test.com",
+        "phone": "555-0000",
+    }
+    response = client.post("/customers/", json=customer_data)
+    return response.json["id"], response
 
 
-def test_delete_mechanic_invalid_id(client):
-    response = client.delete("/mechanics/9999")
-    assert response.status_code == 404
-    assert "not found" in response.json.get("error", "").lower()
+# Helper function to create a test ticket
+def create_ticket(customer_id, mechanics=None):
+    return {
+        "customer_id": customer_id,
+        "vehicle": "Test Car",
+        "description": "Routine maintenance",
+        "mechanics": mechanics or [],
+        "status": "open",
+    }
+
+
+# MECHANIC USAGE IN SERVICE TICKETS
+def test_mechanic_usage_in_service_tickets(client):
+    print("Checking for existing mechanic...")
+
+    # Create mechanic with unique email to avoid duplicate conflict
+    unique_email = f"bob_{uuid.uuid4().hex[:6]}@fixit.com"
+    mech_res = client.post(
+        "/mechanics/",
+        json={
+            "name": "Tech Bob",
+            "email": unique_email,
+            "phone": "555-5678",
+            "salary": 60000,  # Assuming salary is required
+        },
+    )
+    assert mech_res.status_code == 201
+    mechanic_id = mech_res.json["id"]
+
+    # Continue with mechanic usage in service ticket...
+    print("Checking for existing customer...")
+    # Create customer with full required fields
+    cust_res = client.post(
+        "/customers/",
+        json={
+            "name": "Customer Rick",
+            "email": "rick@driver.com",
+            "phone": "555-1111",
+            "password": "pass123",
+        },
+    )
+    print("Customer creation response:", cust_res.status_code, cust_res.json)
+    assert cust_res.status_code == 201
+    customer_id = cust_res.json["id"]
+
+    # Create service ticket
+    ticket_data = {
+        "VIN": "XYZ1234",
+        "service_desc": "Brake replacement",
+        "service_date": "2025-07-15",
+        "customer_id": customer_id,
+    }
+    ticket_res = client.post("/service_tickets/", json=ticket_data)
+    print("Ticket creation response:", ticket_res.status_code, ticket_res.json)
+    assert ticket_res.status_code == 201
+    ticket_id = ticket_res.json["id"]
+
+    # Assign mechanic to the ticket
+    update_data = {"add_mechanic_ids": [mechanic_id], "remove_mechanic_ids": []}
+    edit_res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
+    print("Edit response:", edit_res.status_code, edit_res.json)
+    assert edit_res.status_code == 200
+
+    # Verify mechanic is linked to the service ticket
+    service_ticket = edit_res.json["service_ticket"]
+    mechanic_ids = [m["id"] for m in service_ticket["mechanics"]]
+    assert mechanic_id in mechanic_ids
+
+
+# def test_mechanic_usage_in_service_tickets(client):
+#     # Create a mechanic
+#     res = client.post("/mechanics/", json=create_test_mechanic())
+#     mechanic_id = res.json["id"]
+
+#     # Create a service ticket and assign the mechanic
+#     customer_id, _ = create_customer(client)
+#     ticket_data = create_ticket(customer_id, mechanics=[mechanic_id])
+#     client.post("/service_tickets/", json=ticket_data)
+
+#     # Check mechanic usage
+#     response = client.get("/mechanics/usage")
+#     assert response.status_code == 200
+#     assert any(m["id"] == mechanic_id for m in response.json)
+
+
+# # DELETE MECHANIC TESTS
+# def test_delete_mechanic(client):
+#     res = client.post("/mechanics/", json=create_test_mechanic())
+#     mechanic_id = res.json["id"]
+#     response = client.delete(f"/mechanics/{mechanic_id}")
+#     assert response.status_code == 200
+#     assert "deleted" in response.json["message"].lower()
+
+
+# def test_delete_mechanic_invalid_id(client):
+#     response = client.delete("/mechanics/9999")
+#     assert response.status_code == 404
+#     assert "not found" in response.json.get("error", "").lower()

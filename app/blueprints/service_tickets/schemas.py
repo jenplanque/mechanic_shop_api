@@ -75,11 +75,35 @@ class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
 
 
 class EditServiceTicketSchema(ma.Schema):
-    add_mechanic_ids = fields.List(fields.Int(), required=True)
-    remove_mechanic_ids = fields.List(fields.Int(), required=True)
-
+    add_mechanic_ids = fields.List(fields.Int(), required=False, load_default=[])
+    remove_mechanic_ids = fields.List(fields.Int(), required=False, load_default=[])
+    add_item_ids = fields.List(fields.Int(), required=False, load_default=[])
+    remove_item_ids = fields.List(fields.Int(), required=False, load_default=[])
     class Meta:
-        fields = ("add_mechanic_ids", "remove_mechanic_ids")
+        fields = ("add_mechanic_ids", "remove_mechanic_ids", "add_item_ids", "remove_item_ids")
+
+
+# class EditServiceTicketSchema(ma.Schema):
+#     add_mechanic_ids = fields.List(fields.Int(), required=False, missing=[])
+#     remove_mechanic_ids = fields.List(fields.Int(), required=False, missing=[])
+#     add_item_ids = fields.List(fields.Int(), required=False, missing=[])
+#     remove_item_ids = fields.List(fields.Int(), required=False, missing=[])
+
+#     class Meta:
+#         fields = (
+#             "add_mechanic_ids",
+#             "remove_mechanic_ids",
+#             "add_item_ids",
+#             "remove_item_ids",
+#         )
+
+
+# class EditServiceTicketSchema(ma.Schema):
+#     add_mechanic_ids = fields.List(fields.Int(), required=True)
+#     remove_mechanic_ids = fields.List(fields.Int(), required=True)
+
+#     class Meta:
+#         fields = ("add_mechanic_ids", "remove_mechanic_ids")
 
 
 service_ticket_schema = ServiceTicketSchema()

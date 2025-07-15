@@ -48,66 +48,6 @@ def create_service_ticket():
     return service_ticket_schema.jsonify(new_ticket), 201
 
 
-# @service_tickets_bp.route("/", methods=["POST"])
-# def create_service_ticket():
-#     data = request.get_json()
-
-#     # Validate input
-#     try:
-#         validated_data = service_ticket_schema.load(data)
-#     except ValidationError as e:
-#         return jsonify(e.messages), 400
-
-#     customer_id = validated_data.get("customer_id")
-#     customer = db.session.get(Customer, customer_id)
-#     if not customer:
-#         return jsonify({"error": "Customer not found"}), 404
-
-#     new_ticket = ServiceTicket(
-#         VIN=validated_data["VIN"],
-#         service_desc=validated_data["service_desc"],
-#         service_date=validated_data["service_date"],
-#         customer_id=customer_id,
-#     )
-
-#     db.session.add(new_ticket)
-#     db.session.commit()
-#     return jsonify(service_ticket_schema.dump(new_ticket)), 201
-
-
-# ---
-# @service_tickets_bp.route("/", methods=["POST"])
-# def create_service_ticket():
-#     try:
-#         data = request.get_json()
-#         new_ticket = service_ticket_schema.load(data)
-#         db.session.add(new_ticket)
-#         db.session.commit()
-#         print("POST response JSON:", service_ticket_schema.jsonify(new_ticket))
-#         return service_ticket_schema.jsonify(new_ticket), 201
-#     except ValidationError as e:
-#         return jsonify(e.messages), 400
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 400
-# ---
-# @service_tickets_bp.route("/", methods=["POST"])
-# def create_service_ticket():
-#     try:
-#         service_ticket_data = service_ticket_schema.load(request.json)
-
-#     except ValidationError as e:
-#         return jsonify(e.messages), 400
-
-# customer_id = service_ticket_data.get("customer_id")
-# if not customer_id or not db.session.get(Customer, customer_id):
-#     return jsonify({"error": "Customer not found"}), 404
-
-# new_service_ticket = ServiceTicket(**service_ticket_data)
-# db.session.add(new_service_ticket)
-# db.session.commit()
-# return service_ticket_schema.jsonify(new_service_ticket), 201
-
-
 # GET ALL SERVICE TICKETS
 @service_tickets_bp.route("/", methods=["GET"])
 def get_all_service_tickets():
@@ -145,78 +85,161 @@ def get_my_tickets(current_customer_id):
     return service_tickets_schema.jsonify(result), 200
 
 
-# ADD MECHANIC (singular) TO SERVICE TICKET
-@service_tickets_bp.route(
-    "/<int:service_ticket_id>/assign-mechanic/<int:mechanic_id>",
-    methods=["PUT", "POST"],
-)
-def add_mechanic_to_service_ticket(service_ticket_id, mechanic_id):
-    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
+# EDIT SERVICE TICKET (add/remove mechanics)
+@service_tickets_bp.route("/<int:service_ticket_id>/edit", methods=["PUT"])
+def edit_service_ticket(service_ticket_id):
+    try:
+        service_ticket_edits = edit_service_ticket_schema.load(request.json)
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+
+    query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
+    service_ticket = db.session.execute(query).scalars().first()
+
     if not service_ticket:
-        return jsonify({"error": "Service Ticket not found"}), 404
-
-    mechanic = db.session.get(Mechanic, mechanic_id)
-    if not mechanic:
-        return jsonify({"error": "Mechanic not found"}), 404
-
-    # Ensure mechanics relationship is loaded and append if not already present
-    if mechanic not in service_ticket.mechanics:
-        service_ticket.mechanics.append(mechanic)
-        db.session.commit()
         return (
             jsonify(
-                {
-                    "message": f"Mechanic: '{mechanic.name}' assigned to Service Ticket {service_ticket_id}"
-                }
+                {"error": f"Service Ticket #{service_ticket_id} not found in system"}
             ),
-            200,
-        )
-    else:
-        return (
-            jsonify(
-                {
-                    "message": f"Mechanic: '{mechanic.name}' already assigned to this Service Ticket"
-                }
-            ),
-            400,
+            404,
         )
 
+    # Add mechanics
+    for mech_id in service_ticket_edits.get("add_mechanic_ids", []):
+        mechanic = db.session.get(Mechanic, mech_id)
+        if not mechanic:
+            return jsonify({"error": f"Mechanic: '{mech_id}' not found in system"}), 404
+        if mechanic not in service_ticket.mechanics:
+            service_ticket.mechanics.append(mechanic)
 
-# REMOVE MECHANIC (singular) FROM SERVICE TICKET (supports DELETE and PUT)
-@service_tickets_bp.route(
-    "/<int:service_ticket_id>/remove-mechanic/<int:mechanic_id>",
-    methods=["DELETE", "PUT"],
-)
-def remove_mechanic_from_service_ticket(service_ticket_id, mechanic_id):
-    service_ticket = db.session.get(ServiceTicket, service_ticket_id)
-    if not service_ticket:
-        return jsonify({"error": "Service Ticket not found"}), 404
+    # Remove mechanics
+    for mech_id in service_ticket_edits.get("remove_mechanic_ids", []):
+        mechanic = db.session.get(Mechanic, mech_id)
+        if not mechanic:
+            return jsonify({"error": f"Mechanic: '{mech_id}' not found in system"}), 404
+        if mechanic in service_ticket.mechanics:
+            service_ticket.mechanics.remove(mechanic)
 
-    mechanic = db.session.get(Mechanic, mechanic_id)
-    if not mechanic:
-        return jsonify({"error": "Mechanic not found"}), 404
+    # Add inventory items
+    for item_id in service_ticket_edits.get("add_item_ids", []):
+        item = db.session.get(InventoryItem, item_id)
+        if not item:
+            return (
+                jsonify({"error": f"Inventory item: '{item_id}' not found in system"}),
+                404,
+            )
+        if item not in service_ticket.items:
+            service_ticket.items.append(item)
 
-    # Ensure mechanics relationship is loaded and remove if present
-    if mechanic in service_ticket.mechanics:
-        service_ticket.mechanics.remove(mechanic)
-        db.session.commit()
-        return (
-            jsonify(
-                {
-                    "message": f"Mechanic: '{mechanic.name}' removed from Service Ticket {service_ticket_id}"
-                }
-            ),
-            200,
-        )
-    else:
-        return (
-            jsonify(
-                {
-                    "error": f"Mechanic: '{mechanic.name}' not assigned to this Service Ticket"
-                }
-            ),
-            400,
-        )
+    # Remove inventory items
+    for item_id in service_ticket_edits.get("remove_item_ids", []):
+        item = db.session.get(InventoryItem, item_id)
+        if not item:
+            return (
+                jsonify({"error": f"Inventory item: '{item_id}' not found in system"}),
+                404,
+            )
+        if item in service_ticket.items:
+            service_ticket.items.remove(item)
+
+    db.session.commit()
+    return (
+        jsonify(
+            {
+                "message": f"Service Ticket #{service_ticket_id} updated successfully",
+                "service_ticket": service_ticket_schema.dump(service_ticket),
+            }
+        ),
+        200,
+    )
+
+
+# @service_tickets_bp.route("/<int:service_ticket_id>/edit", methods=["PUT"])
+# def edit_service_ticket(service_ticket_id):
+#     try:
+#         service_ticket_edits = edit_service_ticket_schema.load(request.json)
+#     except ValidationError as e:
+#         return jsonify(e.messages), 400
+
+#     query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
+#     service_ticket = db.session.execute(query).scalars().first()
+
+#     for service_mechanic_id in service_ticket_edits.get("add_mechanic_ids", []):
+#         query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
+#         mechanic = db.session.execute(query).scalars().first()
+
+#         if not service_ticket:
+#             return (
+#                 jsonify(
+#                     {
+#                         "error": f"Service Ticket #{service_ticket_id} not found in system"
+#                     }
+#                 ),
+#                 404,
+#             )
+#         if not mechanic:
+#             return (
+#                 jsonify(
+#                     {"error": f"Mechanic: '{service_mechanic_id}' not found in system"}
+#                 ),
+#                 404,
+#             )
+
+#         if mechanic and mechanic in service_ticket.mechanics:
+#             return (
+#                 jsonify(
+#                     {
+#                         "error": f"Mechanic: '{mechanic.name}' already assigned to Service Ticket #{service_ticket_id}"
+#                     }
+#                 ),
+#                 400,
+#             )
+#         if mechanic and mechanic not in service_ticket.mechanics:
+#             service_ticket.mechanics.append(mechanic)
+
+#     for service_mechanic_id in service_ticket_edits.get("remove_mechanic_ids", []):
+#         query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
+#         mechanic = db.session.execute(query).scalars().first()
+
+#         if not service_ticket:
+#             return (
+#                 jsonify(
+#                     {
+#                         "error": f"Service Ticket #{service_ticket_id} not found in system"
+#                     }
+#                 ),
+#                 404,
+#             )
+#         if not mechanic:
+#             return (
+#                 jsonify(
+#                     {"error": f"Mechanic: '{service_mechanic_id}' not found in system"}
+#                 ),
+#                 404,
+#             )
+
+#         if mechanic and mechanic not in service_ticket.mechanics:
+#             return (
+#                 jsonify(
+#                     {
+#                         "error": f"Mechanic: '{mechanic.name}' not assigned to Service Ticket #{service_ticket_id}"
+#                     }
+#                 ),
+#                 400,
+#             )
+#         if mechanic and mechanic in service_ticket.mechanics:
+#             service_ticket.mechanics.remove(mechanic)
+
+#     db.session.commit()
+#     return (
+#         jsonify(
+#             {
+#                 "message": f"Service Ticket #{service_ticket_id} updated successfully",
+#                 "service_ticket": service_ticket_schema.dump(service_ticket),
+#             }
+#         ),
+#         200,
+#     )
 
 
 # ADD INVENTORY ITEM (singular) TO SERVICE TICKET
@@ -310,95 +333,6 @@ def delete_service_ticket(service_ticket_id):
     return (
         jsonify(
             {f"message": f"Service Ticket #{service_ticket_id} deleted successfully"}
-        ),
-        200,
-    )
-
-
-# EDIT SERVICE TICKET (add/remove mechanics)
-@service_tickets_bp.route("/<int:service_ticket_id>/edit", methods=["PUT"])
-def edit_service_ticket(service_ticket_id):
-    try:
-        service_ticket_edits = edit_service_ticket_schema.load(request.json)
-    except ValidationError as e:
-        return jsonify(e.messages), 400
-
-    query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
-    service_ticket = db.session.execute(query).scalars().first()
-
-    for service_mechanic_id in service_ticket_edits.get("add_mechanic_ids", []):
-        query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
-        mechanic = db.session.execute(query).scalars().first()
-
-        if not service_ticket:
-            return (
-                jsonify(
-                    {
-                        "error": f"Service Ticket #{service_ticket_id} not found in system"
-                    }
-                ),
-                404,
-            )
-        if not mechanic:
-            return (
-                jsonify(
-                    {"error": f"Mechanic: '{service_mechanic_id}' not found in system"}
-                ),
-                404,
-            )
-
-        if mechanic and mechanic in service_ticket.mechanics:
-            return (
-                jsonify(
-                    {
-                        "error": f"Mechanic: '{mechanic.name}' already assigned to Service Ticket #{service_ticket_id}"
-                    }
-                ),
-                400,
-            )
-        if mechanic and mechanic not in service_ticket.mechanics:
-            service_ticket.mechanics.append(mechanic)
-
-    for service_mechanic_id in service_ticket_edits.get("remove_mechanic_ids", []):
-        query = select(Mechanic).where(Mechanic.id == service_mechanic_id)
-        mechanic = db.session.execute(query).scalars().first()
-
-        if not service_ticket:
-            return (
-                jsonify(
-                    {
-                        "error": f"Service Ticket #{service_ticket_id} not found in system"
-                    }
-                ),
-                404,
-            )
-        if not mechanic:
-            return (
-                jsonify(
-                    {"error": f"Mechanic: '{service_mechanic_id}' not found in system"}
-                ),
-                404,
-            )
-
-        if mechanic and mechanic not in service_ticket.mechanics:
-            return (
-                jsonify(
-                    {
-                        "error": f"Mechanic: '{mechanic.name}' not assigned to Service Ticket #{service_ticket_id}"
-                    }
-                ),
-                400,
-            )
-        if mechanic and mechanic in service_ticket.mechanics:
-            service_ticket.mechanics.remove(mechanic)
-
-    db.session.commit()
-    return (
-        jsonify(
-            {
-                "message": f"Service Ticket #{service_ticket_id} updated successfully",
-                "service_ticket": service_ticket_schema.dump(service_ticket),
-            }
         ),
         200,
     )

@@ -1,8 +1,8 @@
 from datetime import date
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import List
-from sqlalchemy import Numeric
+from sqlalchemy import Numeric, Column, Integer
 
 
 class Base(DeclarativeBase):
@@ -23,9 +23,29 @@ service_mechanics = db.Table(
 service_inventory = db.Table(
     "service_inventory",
     Base.metadata,
+    # db.Model.metadata,
     db.Column("service_id", db.ForeignKey("service_tickets.id")),
     db.Column("item_id", db.ForeignKey("inventory_items.id")),
 )
+
+# association table
+# service_ticket_inventory = db.Table(
+#     "service_ticket_inventory",
+#     db.Model.metadata,
+#     db.Column("service_ticket_id", db.Integer, db.ForeignKey("service_tickets.id")),
+#     db.Column("inventory_item_id", db.Integer, db.ForeignKey("inventory_items.id")),
+# )
+
+
+# ticket_inventory = db.Table(
+#     "ticket_inventory",
+#     db.Column(
+#         "ticket_id", db.Integer, db.ForeignKey("service_ticket.id"), primary_key=True
+#     ),
+#     db.Column(
+#         "inventory_id", db.Integer, db.ForeignKey("inventory.id"), primary_key=True
+#     ),
+# )
 
 
 class Customer(Base):
@@ -58,9 +78,29 @@ class ServiceTicket(Base):
         "Mechanic", secondary=service_mechanics, back_populates="service_tickets"
     )
 
+    # inventory_items: Mapped[List["InventoryItem"]] = db.relationship(
+    #     "InventoryItem", secondary=service_inventory, back_populates="service_tickets"
+    # )
+
     inventory_items: Mapped[List["InventoryItem"]] = db.relationship(
         "InventoryItem", secondary=service_inventory, back_populates="service_tickets"
     )
+
+    # items = db.relationship(
+    #     "InventoryItem", secondary=service_inventory, backref="service_tickets"
+    # )
+    # ServiceTicket model
+
+
+# class ServiceTicket(db.Model):
+#     __tablename__ = "service_tickets"
+#     id = Column(Integer, primary_key=True)
+#     ...
+#     inventory_items = relationship(
+#         "InventoryItem",
+#         secondary=service_inventory,
+#         back_populates="service_tickets",  # no backref here
+#     )
 
 
 class Mechanic(Base):
@@ -90,3 +130,15 @@ class InventoryItem(Base):
     service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
         "ServiceTicket", secondary=service_inventory, back_populates="inventory_items"
     )
+
+
+# InventoryItem model
+# class InventoryItem(db.Model):
+#     __tablename__ = "inventory_items"
+#     id = Column(Integer, primary_key=True)
+#     ...
+#     service_tickets = relationship(
+#         "ServiceTicket",
+#         secondary=service_inventory,
+#         back_populates="inventory_items",  # matches the other side
+#     )

@@ -27,7 +27,6 @@ def test_create_inventory_item(client):
     assert response.status_code == 201
     assert response.json["name"] == "Brake Pads"
 
-
 def test_invalid_inventory_creation(client):
     bad_data = {"price": 12.99}
     response = client.post("/inventory/", json=bad_data)
@@ -49,7 +48,6 @@ def test_get_all_inventory(client):
     assert isinstance(response.json, list)
     assert any(p["name"] == "Brake Pads" for p in response.json)
 
-
 def test_get_all_inventory_empty(client):
     response = client.get("/inventory/")
     assert response.status_code == 200
@@ -62,7 +60,6 @@ def test_get_inventory_by_id(client):
     response = client.get(f"/inventory/{part_id}")
     assert response.status_code == 200
     assert response.json["name"] == "Brake Pads"
-
 
 def test_get_inventory_invalid_id(client):
     response = client.get("/inventory/9999")
@@ -82,13 +79,11 @@ def test_update_inventory(client):
     assert response.status_code == 200
     assert response.json["name"] == "Brake Pads - Premium"
 
-
 def test_update_inventory_invalid_id(client):
     update_data = {"name": "Invalid Part", "price": 0.0}
     response = client.put("/inventory/9999", json=update_data)
     assert response.status_code == 404
     assert "not found" in str(response.json).lower()
-
 
 def test_update_inventory_duplicate_name(client):
     part1 = {"name": "Brake Pads", "price": 49.99}
@@ -109,7 +104,6 @@ def test_delete_inventory(client):
     response = client.delete(f"/inventory/{part_id}")
     assert response.status_code == 200
     assert "deleted" in response.json["message"].lower()
-
 
 def test_delete_inventory_invalid_id(client):
     response = client.delete("/inventory/9999")

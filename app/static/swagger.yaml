@@ -374,22 +374,22 @@ paths:
               service_date: '2025-10-01'
               service_desc: 'Oil change and tire rotation'
 
-    delete:
-      tags: [Service Tickets]
-      summary: Delete Service ticket
-      description: Delete service ticket using its unique ID.
-      parameters:
-        - in: path
-          name: id
-          description: Service Ticket's unique ID
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Successfully deleted Service Ticket
-          examples:
-            application/json:
-              message: Service Ticket <id> deleted successfully
+    # delete:
+    #   tags: [Service Tickets]
+    #   summary: Delete Service ticket
+    #   description: Delete service ticket using its unique ID.
+    #   parameters:
+    #     - in: path
+    #       name: id
+    #       description: Service Ticket's unique ID
+    #       required: true
+    #       type: integer
+    #   responses:
+    #     200:
+    #       description: Successfully deleted Service Ticket
+    #       examples:
+    #         application/json:
+    #           message: Service Ticket <id> deleted successfully
 
   /service_tickets/{id}/edit:
     put:
@@ -446,77 +446,22 @@ paths:
         404:
           description: Customer not found
 
-  /service_tickets/{service_ticket_id}/assign-mechanic/{mechanic_id}:
-    put:
+    delete:
       tags: [Service Tickets]
-      summary: Assign a mechanic to a service ticket
-      description: Adds the specified mechanic to the service ticket's assigned list.
+      summary: Delete Service ticket
+      description: Delete service ticket using its unique ID.
       parameters:
         - in: path
-          name: service_ticket_id
+          name: id
           description: Service Ticket's unique ID
-          required: true
-          type: integer
-        - in: path
-          name: mechanic_id
-          description: Mechanic's unique ID to assign
           required: true
           type: integer
       responses:
         200:
-          description: Successfully added mechanic to service ticket
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: Mechanic 'Jane Doe' successfully added to Service Ticket 2
-
-  /service_tickets/{service_ticket_id}/remove-mechanic/{mechanic_id}:
-    put:
-      tags: [Service Tickets]
-      summary: Remove a mechanic from a service ticket
-      description: Removes the specified mechanic from the list of assigned mechanics.
-      parameters:
-        - in: path
-          name: service_ticket_id
-          description: Service Ticket's unique ID
-          required: true
-          type: integer
-        - in: path
-          name: mechanic_id
-          description: Mechanic's unique ID to remove
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Mechanic successfully removed
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: Mechanic 'Jane Doe' removed from Service Ticket 2
-        400:
-          description: Mechanic was not assigned
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: Mechanic 'Jane Doe' not assigned to this Service Ticket.
-        404:
-          description: Ticket or mechanic not found
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: Service Ticket/Mechanic not found
+          description: Successfully deleted Service Ticket
+          examples:
+            application/json:
+              message: Service Ticket <id> deleted successfully
 
   /service_tickets/{service_ticket_id}/assign-item/{item_id}:
     put:
@@ -607,6 +552,78 @@ paths:
                 type: string
             example:
               message: Ticket/Inventory Item not found
+
+  # /service_tickets/{service_ticket_id}/assign-mechanic/{mechanic_id}:
+  #   put:
+  #     tags: [Service Tickets]
+  #     summary: Assign a mechanic to a service ticket
+  #     description: Adds the specified mechanic to the service ticket's assigned list.
+  #     parameters:
+  #       - in: path
+  #         name: service_ticket_id
+  #         description: Service Ticket's unique ID
+  #         required: true
+  #         type: integer
+  #       - in: path
+  #         name: mechanic_id
+  #         description: Mechanic's unique ID to assign
+  #         required: true
+  #         type: integer
+  #     responses:
+  #       200:
+  #         description: Successfully added mechanic to service ticket
+  #         schema:
+  #           type: object
+  #           properties:
+  #             message:
+  #               type: string
+  #           example:
+  #             message: Mechanic 'Jane Doe' successfully added to Service Ticket 2
+
+  # /service_tickets/{service_ticket_id}/remove-mechanic/{mechanic_id}:
+  #   put:
+  #     tags: [Service Tickets]
+  #     summary: Remove a mechanic from a service ticket
+  #     description: Removes the specified mechanic from the list of assigned mechanics.
+  #     parameters:
+  #       - in: path
+  #         name: service_ticket_id
+  #         description: Service Ticket's unique ID
+  #         required: true
+  #         type: integer
+  #       - in: path
+  #         name: mechanic_id
+  #         description: Mechanic's unique ID to remove
+  #         required: true
+  #         type: integer
+  #     responses:
+  #       200:
+  #         description: Mechanic successfully removed
+  #         schema:
+  #           type: object
+  #           properties:
+  #             message:
+  #               type: string
+  #           example:
+  #             message: Mechanic 'Jane Doe' removed from Service Ticket 2
+  #       400:
+  #         description: Mechanic was not assigned
+  #         schema:
+  #           type: object
+  #           properties:
+  #             message:
+  #               type: string
+  #           example:
+  #             message: Mechanic 'Jane Doe' not assigned to this Service Ticket.
+  #       404:
+  #         description: Ticket or mechanic not found
+  #         schema:
+  #           type: object
+  #           properties:
+  #             message:
+  #               type: string
+  #           example:
+  #             message: Service Ticket/Mechanic not found
 
   # ------------------------
   # Inventory Paths

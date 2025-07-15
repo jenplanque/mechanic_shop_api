@@ -14,7 +14,7 @@ def client():
         yield app.test_client()
 
 
-# Helper to create a customer
+# HELPER TO CREATE CUSTOMER
 def create_customer(client):
     email = f"user_{uuid.uuid4().hex[:6]}@test.com"
     response = client.post(
@@ -30,7 +30,7 @@ def create_customer(client):
     return response.json["id"], email
 
 
-# Helper to create a mechanic
+# HELPER TO CREATE MECHANIC
 def create_mechanic(client):
     response = client.post(
         "/mechanics/",
@@ -45,7 +45,20 @@ def create_mechanic(client):
     return response.json["id"]
 
 
-# Helper to create ticket data
+# HELPER TO CREATE INVENTORY ITEM
+def create_inventory_item(client):
+    response = client.post(
+        "/inventory/",
+        json={
+            "name": "Oil Filter",
+            "price": 19.99,
+        },
+    )
+    assert response.status_code == 201
+    return response.json["id"]
+
+
+# HELPER TO CREATE SERVICE TICKET
 def create_ticket(customer_id):
     return {
         "VIN": "1HGCM82633A123456",
@@ -55,6 +68,7 @@ def create_ticket(customer_id):
     }
 
 
+# ADD SERVICE TICKET
 def test_create_ticket(client):
     customer_id, _ = create_customer(client)
     response = client.post("/service_tickets/", json=create_ticket(customer_id))
@@ -78,6 +92,7 @@ def test_create_ticket_invalid_customer(client):
     assert res.status_code == 404
 
 
+# GET/SERVICE TICKETS
 def test_get_all_tickets_empty(client):
     res = client.get("/service_tickets/")
     assert res.status_code == 200
@@ -135,6 +150,73 @@ def test_get_my_tickets_no_open_tickets(client):
     assert res.json["message"] == "No open service tickets found for this customer."
 
 
+def test_get_my_tickets_invalid_token(client):
+    response = client.get(
+        "/service_tickets/my-tickets", headers={"Authorization": "Bearer invalid_token"}
+    )
+    assert response.status_code == 401
+    assert "invalid" in response.json.get("message", "").lower()
+
+
+# UPDATE SERVICE TICKET (add/remove mechanics)
+def test_update_ticket_mechanics(client):
+    customer_id, _ = create_customer(client)
+    ticket_data = create_ticket(customer_id)
+    res = client.post("/service_tickets/", json=ticket_data)
+    ticket_id = res.json["id"]
+
+    mechanic_id = create_mechanic(client)
+
+    update_data = {"add_mechanic_ids": [mechanic_id], "remove_mechanic_ids": []}
+    update_res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
+    assert update_res.status_code == 200
+    assert mechanic_id in [
+        m["id"] for m in update_res.json["service_ticket"]["mechanics"]
+    ]
+
+
+def test_update_ticket_mechanics_invalid_ticket(client):
+    mechanic_id = create_mechanic(client)
+    update_data = {"add_mechanic_ids": [mechanic_id], "remove_mechanic_ids": []}
+    res = client.put("/service_tickets/9999/edit", json=update_data)
+    assert res.status_code == 404
+    assert "not found" in res.json.get("error", "").lower()
+
+
+def test_update_ticket_mechanics_invalid_mechanic(client):
+    customer_id, _ = create_customer(client)
+    ticket_data = create_ticket(customer_id)
+    res = client.post("/service_tickets/", json=ticket_data)
+    ticket_id = res.json["id"]
+
+    update_data = {
+        "add_mechanic_ids": [9999],  # Invalid mechanic ID
+        "remove_mechanic_ids": [],
+    }
+    res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
+    assert res.status_code == 404
+    assert "not found" in res.json.get("error", "").lower()
+
+
+# UPDATE SERVICE TICKET (add/remove inventory items)
+def test_update_ticket_inventory(client):
+    customer_id, _ = create_customer(client)
+    ticket_data = create_ticket(customer_id)
+    res = client.post("/service_tickets/", json=ticket_data)
+    ticket_id = res.json["id"]
+
+    item_id = create_inventory_item(client)
+
+
+    update_data = {"add_item_ids": [item_id], "remove_item_ids": []}
+    update_res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
+    assert update_res.status_code == 200
+    assert item_id in [
+        i["id"] for i in update_res.json["service_ticket"]["inventory_items"]
+    ]
+
+
+# DELETE SERVICE TICKET
 def test_delete_ticket(client):
     customer_id, _ = create_customer(client)
     res = client.post("/service_tickets/", json=create_ticket(customer_id))

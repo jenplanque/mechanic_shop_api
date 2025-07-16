@@ -6,8 +6,6 @@ from app.models import db, InventoryItem
 from app.extensions import limiter
 from . import inventory_items_bp
 
-# from app.utils.util import encode_token, token_required
-
 
 # ADD INVENTORY ITEM
 @inventory_items_bp.route("/", methods=["POST"])

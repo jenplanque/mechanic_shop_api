@@ -720,11 +720,6 @@ definitions:
       name:
         type: string
 
-        # mechanics:
-        # type: array
-        # items:
-        #   $ref: '#/definitions/MechanicResponse'
-
   MechanicList:
     type: array
     items:
@@ -794,29 +789,6 @@ definitions:
     properties:
       mechanics:
         type: integer
-    # mechanics:
-    #     type: array
-    #     items:
-    #       $ref: '#/definitions/MechanicUpdateResponse'
-
-    # items:
-    #   $ref: '#/definitions/ServiceTicketResponse'
-    # properties:
-    #   ticket_id:
-    #     type: integer
-    #   VIN:
-    #     type: string
-    #   customer_info:
-    #     $ref: '#/definitions/CreateCustomerResponse'
-    #   mechanics:
-    #     type: array
-    #     items:
-    #       $ref: '#/definitions/MechanicResponse'
-    #   service_date:
-    #     type: string
-    #     format: date
-    #   service_desc:
-    #     type: string
 
   CreateServiceTicketResponse:
     type: object

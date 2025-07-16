@@ -137,56 +137,6 @@
 					"response": []
 				},
 				{
-					"name": "Assign Mechanic to Ticket",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5000/service_tickets/8/assign-mechanic/9",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5000",
-							"path": [
-								"service_tickets",
-								"8",
-								"assign-mechanic",
-								"9"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Remove Mechanic from Ticket",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5000/service_tickets/2/remove-mechanic/5",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5000",
-							"path": [
-								"service_tickets",
-								"2",
-								"remove-mechanic",
-								"5"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Mechanic Usage",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
@@ -671,13 +621,13 @@
 					"response": []
 				},
 				{
-					"name": "Edit Service Ticket",
+					"name": "Update Service Ticket",
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"add_mechanic_ids\": [],\n    \"remove_mechanic_ids\": [5,9]\n}",
+							"raw": "{\n    \"add_mechanic_ids\": [4],\n    \"remove_mechanic_ids\": [],\n    \"add_item_ids\": [],\n    \"remove_item_ids\": []\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -685,7 +635,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:5000/service_tickets/8/edit",
+							"raw": "http://127.0.0.1:5000/service_tickets/1/edit",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -696,7 +646,7 @@
 							"port": "5000",
 							"path": [
 								"service_tickets",
-								"8",
+								"1",
 								"edit"
 							]
 						}
@@ -857,56 +807,6 @@
 					"response": []
 				},
 				{
-					"name": "Assign Item to Ticket",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5000/service_tickets/7/assign-item/5",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5000",
-							"path": [
-								"service_tickets",
-								"7",
-								"assign-item",
-								"5"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Remove Item from Ticket",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5000/service_tickets/1/remove-item/2",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5000",
-							"path": [
-								"service_tickets",
-								"1",
-								"remove-item",
-								"2"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Update Item (id)",
 					"request": {
 						"method": "PUT",
@@ -965,40 +865,6 @@
 							"path": [
 								"inventory",
 								"10"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "archives",
-			"item": [
-				{
-					"name": "Get Customer (id)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://127.0.0.1:5000/customers/3",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5000",
-							"path": [
-								"customers",
-								"3"
 							]
 						}
 					},

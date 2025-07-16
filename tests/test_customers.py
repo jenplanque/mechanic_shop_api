@@ -26,34 +26,6 @@ def create_test_customer():
     }
 
 
-# def create_customer(client):
-#     response = client.post(
-#         "/customers/",
-#         json={
-#             "name": "Jane Doe",
-#             "email": "jane@customer.com",
-#             "phone": "503-555-5678",
-#             "password": "securepassword",
-#         },
-#     )
-#     return response.json["id"]
-
-
-# # HELPER FUNCTION TO CREATE A SERVICE TICKET
-# def create_ticket(customer_id):
-#     return {
-#         "VIN": "ABC123XYZ",
-#         "service_desc": "Oil change and tire rotation",
-#         "service_date": "2025-07-13",
-#         "customer_id": customer_id,
-#         "customer": {
-#             "id": customer_id,
-#             "name": "Jane Doe",
-#             "email": "jane@customer.com",
-#             "phone": "503-555-5678",
-#         },
-#     }
-
 
 # CREATE CUSTOMER TESTS
 def test_create_customer(client):
@@ -108,20 +80,6 @@ def test_get_all_customers_empty(client):
     response = client.get("/customers/")
     assert response.status_code == 200
     assert response.json == []
-
-
-# def test_get_tickets_by_customer_id(client):
-#     customer_id = create_customer(client)
-#     client.post("/service_tickets/", json=create_ticket(customer_id))
-#     response = client.get(f"/customers/{customer_id}/tickets")
-#     assert response.status_code == 200
-#     assert isinstance(response.json, list)
-#     assert all(ticket["customer_id"] == customer_id for ticket in response.json)
-
-# def test_get_tickets_by_invalid_customer_id(client):
-#     response = client.get("/customers/9999/tickets")
-#     assert response.status_code == 404
-#     assert "not found" in response.json.get("error", "").lower()
 
 
 # UPDATE CUSTOMER TESTS

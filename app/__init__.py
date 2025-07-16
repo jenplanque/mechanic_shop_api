@@ -34,7 +34,6 @@ def create_app(config_name):
     app.config.from_object(f"config.{config_name}")
     app.config["RATELIMIT_STORAGE_URL"] = "redis://localhost:6379"
 
-    # app.config.from_envvar("FLASK_CONFIG", silent=True)
 
     # Initialize extensions
     ma.init_app(app)  # Initialize Marshmallow

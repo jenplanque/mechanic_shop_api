@@ -374,28 +374,11 @@ paths:
               service_date: '2025-10-01'
               service_desc: 'Oil change and tire rotation'
 
-    # delete:
-    #   tags: [Service Tickets]
-    #   summary: Delete Service ticket
-    #   description: Delete service ticket using its unique ID.
-    #   parameters:
-    #     - in: path
-    #       name: id
-    #       description: Service Ticket's unique ID
-    #       required: true
-    #       type: integer
-    #   responses:
-    #     200:
-    #       description: Successfully deleted Service Ticket
-    #       examples:
-    #         application/json:
-    #           message: Service Ticket <id> deleted successfully
-
   /service_tickets/{id}/edit:
     put:
       tags: [Service Tickets]
       summary: Update Service Ticket
-      description: Add/Remove Mechanic details of an existing service ticket using its unique ID.
+      description: Add/Remove Mechanic and Inventory Item details of an existing service ticket using its unique ID.
       parameters:
         - in: path
           name: id
@@ -410,19 +393,22 @@ paths:
             $ref: '#/definitions/UpdateServiceTicketPayload'
       responses:
         200:
-          description: Successfully Updated Service Ticket
+          description: Service Ticket <id> updated successfully
           schema:
             $ref: '#/definitions/UpdateServiceTicketResponse'
           examples:
             application/json:
               service_ticket:
                 VIN: '1HGCM82633A123456'
-                customer_info:
-                  email: 'john.doe@example.com'
-                  id: 1
-                  name: John Doe
-                  phone: '123-456-7890'
-              ticket_id: 4
+                customer_id: 3
+                id: 4
+                inventory_items:
+                  - id: 1
+                    name: Oil Filter
+                    price: 19.99
+                  - id: 2
+                    name: Tire Rotation
+                    price: 99.99
               mechanics:
                 - id: 1
                   name: Jane Mechanic
@@ -462,168 +448,6 @@ paths:
           examples:
             application/json:
               message: Service Ticket <id> deleted successfully
-
-  /service_tickets/{service_ticket_id}/assign-item/{item_id}:
-    put:
-      tags: [Service Tickets]
-      summary: Assign inventory item to a service ticket
-      description: Adds an inventory item/part to the specified service ticket.
-      parameters:
-        - in: path
-          name: service_ticket_id
-          description: Service Ticket's unique ID
-          required: true
-          type: integer
-        - in: path
-          name: item_id
-          description: Inventory item's unique ID to assign
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Inventory item successfully added
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: 'Oil Filter successfully added to Ticket 2'
-        400:
-          description: Item already assigned
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: 'Oil Filter already assigned to Ticket.'
-        404:
-          description: Ticket or Inventory item not found
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: Ticket/Inventory Item not found
-
-  /service_tickets/{service_ticket_id}/remove-item/{item_id}:
-    put:
-      tags: [Service Tickets]
-      summary: Remove inventory item from a service ticket
-      description: Removes an inventory item/part from the specified service ticket.
-      parameters:
-        - in: path
-          name: service_ticket_id
-          description: Service Ticket's unique ID
-          required: true
-          type: integer
-        - in: path
-          name: item_id
-          description: Inventory item's unique ID to remove
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Inventory item successfully removed
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: 'Oil Filter successfully removed from Service Ticket 2'
-        400:
-          description: Item not assigned
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: 'Oil Filter not assigned to this Service Ticket.'
-        404:
-          description: Ticket or Inventory item not found
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: Ticket/Inventory Item not found
-
-  # /service_tickets/{service_ticket_id}/assign-mechanic/{mechanic_id}:
-  #   put:
-  #     tags: [Service Tickets]
-  #     summary: Assign a mechanic to a service ticket
-  #     description: Adds the specified mechanic to the service ticket's assigned list.
-  #     parameters:
-  #       - in: path
-  #         name: service_ticket_id
-  #         description: Service Ticket's unique ID
-  #         required: true
-  #         type: integer
-  #       - in: path
-  #         name: mechanic_id
-  #         description: Mechanic's unique ID to assign
-  #         required: true
-  #         type: integer
-  #     responses:
-  #       200:
-  #         description: Successfully added mechanic to service ticket
-  #         schema:
-  #           type: object
-  #           properties:
-  #             message:
-  #               type: string
-  #           example:
-  #             message: Mechanic 'Jane Doe' successfully added to Service Ticket 2
-
-  # /service_tickets/{service_ticket_id}/remove-mechanic/{mechanic_id}:
-  #   put:
-  #     tags: [Service Tickets]
-  #     summary: Remove a mechanic from a service ticket
-  #     description: Removes the specified mechanic from the list of assigned mechanics.
-  #     parameters:
-  #       - in: path
-  #         name: service_ticket_id
-  #         description: Service Ticket's unique ID
-  #         required: true
-  #         type: integer
-  #       - in: path
-  #         name: mechanic_id
-  #         description: Mechanic's unique ID to remove
-  #         required: true
-  #         type: integer
-  #     responses:
-  #       200:
-  #         description: Mechanic successfully removed
-  #         schema:
-  #           type: object
-  #           properties:
-  #             message:
-  #               type: string
-  #           example:
-  #             message: Mechanic 'Jane Doe' removed from Service Ticket 2
-  #       400:
-  #         description: Mechanic was not assigned
-  #         schema:
-  #           type: object
-  #           properties:
-  #             message:
-  #               type: string
-  #           example:
-  #             message: Mechanic 'Jane Doe' not assigned to this Service Ticket.
-  #       404:
-  #         description: Ticket or mechanic not found
-  #         schema:
-  #           type: object
-  #           properties:
-  #             message:
-  #               type: string
-  #           example:
-  #             message: Service Ticket/Mechanic not found
 
   # ------------------------
   # Inventory Paths
@@ -956,6 +780,14 @@ definitions:
         type: array
         items:
           type: integer
+      add_item_ids:
+        type: array
+        items:
+          type: integer
+      remove_item_ids:
+        type: array
+        items:
+          type: integer
 
   UpdateServiceTicketResponse:
     type: array
@@ -1003,14 +835,6 @@ definitions:
         type: string
         format: date
       service_desc:
-        type: string
-
-  AddMechanicToServiceTicketResponse:
-    type: object
-    properties:
-      # service_ticket:
-      #   $ref: '#/definitions/ServiceTicketResponse'
-      message:
         type: string
 
   # ------------------------

@@ -158,61 +158,64 @@ def test_get_my_tickets_invalid_token(client):
     assert "invalid" in response.json.get("message", "").lower()
 
 
-# UPDATE SERVICE TICKET (add/remove mechanics)
-def test_update_ticket_mechanics(client):
+# UPDATE SERVICE TICKET - ADD/REMOVE MECHANICS AND INVENTORY
+def test_update_ticket_combined_mechanics_inventory(client):
     customer_id, _ = create_customer(client)
     ticket_data = create_ticket(customer_id)
     res = client.post("/service_tickets/", json=ticket_data)
     ticket_id = res.json["id"]
 
     mechanic_id = create_mechanic(client)
+    item_id = create_inventory_item(client)
 
-    update_data = {"add_mechanic_ids": [mechanic_id], "remove_mechanic_ids": []}
+    update_data = {
+        "add_mechanic_ids": [mechanic_id],
+        "remove_mechanic_ids": [],
+        "add_item_ids": [item_id],
+        "remove_item_ids": [],
+    }
+
     update_res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
     assert update_res.status_code == 200
-    assert mechanic_id in [
-        m["id"] for m in update_res.json["service_ticket"]["mechanics"]
-    ]
+    response = update_res.json["service_ticket"]
+
+    # Assert mechanic and inventory item were added
+    assert mechanic_id in [m["id"] for m in response["mechanics"]]
+    assert item_id in [i["id"] for i in response["inventory_items"]]
 
 
-def test_update_ticket_mechanics_invalid_ticket(client):
-    mechanic_id = create_mechanic(client)
-    update_data = {"add_mechanic_ids": [mechanic_id], "remove_mechanic_ids": []}
-    res = client.put("/service_tickets/9999/edit", json=update_data)
-    assert res.status_code == 404
-    assert "not found" in res.json.get("error", "").lower()
-
-
-def test_update_ticket_mechanics_invalid_mechanic(client):
+def test_update_ticket_combined_invalid_ids(client):
     customer_id, _ = create_customer(client)
     ticket_data = create_ticket(customer_id)
     res = client.post("/service_tickets/", json=ticket_data)
     ticket_id = res.json["id"]
 
     update_data = {
-        "add_mechanic_ids": [9999],  # Invalid mechanic ID
+        "add_mechanic_ids": [9999],  # invalid mechanic
         "remove_mechanic_ids": [],
+        "add_item_ids": [8888],  # invalid inventory item
+        "remove_item_ids": [],
     }
-    res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
-    assert res.status_code == 404
-    assert "not found" in res.json.get("error", "").lower()
 
-
-# UPDATE SERVICE TICKET (add/remove inventory items)
-def test_update_ticket_inventory(client):
-    customer_id, _ = create_customer(client)
-    ticket_data = create_ticket(customer_id)
-    res = client.post("/service_tickets/", json=ticket_data)
-    ticket_id = res.json["id"]
-
-    item_id = create_inventory_item(client)
-
-    update_data = {"add_item_ids": [item_id], "remove_item_ids": []}
     update_res = client.put(f"/service_tickets/{ticket_id}/edit", json=update_data)
     assert update_res.status_code == 200
-    assert item_id in [
-        i["id"] for i in update_res.json["service_ticket"]["inventory_items"]
-    ]
+    notes = update_res.json.get("notes", [])
+    assert any("mechanic" in note.lower() for note in notes)
+    assert any("inventory" in note.lower() for note in notes)
+
+
+def test_update_ticket_combined_invalid_ticket(client):
+    mechanic_id = create_mechanic(client)
+    item_id = create_inventory_item(client)
+    update_data = {
+        "add_mechanic_ids": [mechanic_id],
+        "remove_mechanic_ids": [],
+        "add_item_ids": [item_id],
+        "remove_item_ids": [],
+    }
+    res = client.put("/service_tickets/9999/edit", json=update_data)
+    assert res.status_code == 404
+    assert "not found" in res.json.get("error", "").lower()
 
 
 # DELETE SERVICE TICKET

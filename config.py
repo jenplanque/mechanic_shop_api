@@ -2,9 +2,7 @@ import os
 
 
 class DevelopmentConfig:
-    SQLALCHEMY_DATABASE_URI = (
-        f"mysql+mysqlconnector://root:{os.getenv('DB_PW')}@localhost/mechanic_db"
-    )
+    SQLALCHEMY_DATABASE_URI = "sqlite:///mechanic_shop.db"  # Use SQLite for development
     DEBUG = True
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = 300  # Default cache timeout in seconds

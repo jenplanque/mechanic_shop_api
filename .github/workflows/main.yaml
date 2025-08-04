@@ -27,12 +27,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Print debugging information
-        run: |
-          echo "Python Version: $(python --version)"
-          echo "Working Directory: $(pwd)"
-          echo "Contents of Working Directory: $(ls -l)"
-          echo "Contents of site-packages: $(ls -l venv/lib/python*/site-packages)"
+      #   - name: Print debugging information
+      #     run: |
+      #       echo "Python Version: $(python --version)"
+      #       echo "Working Directory: $(pwd)"
+      #       echo "Contents of Working Directory: $(ls -l)"
+      #       echo "Contents of site-packages: $(ls -l venv/lib/python*/site-packages)"
 
       - name: Run tests
         run: python -m unittest discover -s tests -p 'test_*.py'

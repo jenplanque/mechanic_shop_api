@@ -1,7 +1,12 @@
+import os
 from app import create_app
 from app.models import db
 
-app = create_app("DevelopmentConfig")
+app = create_app("ProductionConfig")
+# app = create_app("DevelopmentConfig")
+# config_name = os.getenv("FLASK_CONFIG", "DevelopmentConfig")
+# app = create_app(config_name)
+
 
 with app.app_context():
     # db.reflect()  # Reflect existing tables

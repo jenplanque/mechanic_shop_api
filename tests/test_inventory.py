@@ -1,6 +1,12 @@
+from urllib import response
 import pytest
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from app import create_app
 from app.models import db
+from flask import current_app
+import uuid  # is this necessary?
 
 
 @pytest.fixture
@@ -32,7 +38,7 @@ def test_invalid_inventory_creation(client):
     response = client.post("/inventory/", json=bad_data)
     assert response.status_code == 400
     assert "name" in str(response.json)
-    
+
 def test_create_inventory_duplicate_name(client):
     client.post("/inventory/", json=create_test_part())
     response = client.post("/inventory/", json=create_test_part())

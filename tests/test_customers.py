@@ -1,8 +1,12 @@
 from urllib import response
 import pytest
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from app import create_app
-from app.models import db, Customer
+from app.models import db
 from flask import current_app
+import uuid  # is this necessary?
 
 
 @pytest.fixture
@@ -24,7 +28,6 @@ def create_test_customer():
         "phone": "123-456-7890",
         "password": "securepassword",
     }
-
 
 
 # CREATE CUSTOMER TESTS

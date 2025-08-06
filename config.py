@@ -2,8 +2,10 @@ import os
 
 
 class DevelopmentConfig:
+    # Safely handle missing DB_PW environment variable
+    db_password = os.getenv("DB_PW", "defaultpassword")
     SQLALCHEMY_DATABASE_URI = (
-        f"mysql+mysqlconnector://root:{os.getenv('DB_PW')}@localhost/mechanic_db"
+        f"mysql+mysqlconnector://root:{db_password}@localhost/mechanic_db"
     )
     DEBUG = True
     CACHE_TYPE = "SimpleCache"
@@ -39,10 +41,18 @@ def get_database_uri():
 
 
 class ProductionConfig:
-    SQLALCHEMY_DATABASE_URI = get_database_uri()
     DEBUG = False
     TESTING = False
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = 300
     # Rate limiter storage (suppress warning)
     RATELIMIT_STORAGE_URL = "memory://"
+
+    # Defer database URI resolution until it's actually needed
+    @staticmethod
+    def init_app(app):
+        # This method can be called to do additional setup if needed
+        pass
+
+    # Use a property or set this in __init__ of the app
+    SQLALCHEMY_DATABASE_URI = None  # Will be set dynamically

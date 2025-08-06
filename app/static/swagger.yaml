@@ -4,9 +4,9 @@ info:
   description: 'API for a fictitious Mechanic Shop, built entirely from scratch.'
   version: '1.0.0'
 
-host: '127.0.0.1:5000'
+host: 'mechanic-shop-api-1-ezx9.onrender.com'
 schemes:
-  - 'http'
+  - 'https'
 consumes:
   - 'application/json'
 produces:

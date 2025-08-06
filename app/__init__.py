@@ -31,6 +31,10 @@ def create_app(config_name):
         app.config.from_object("config.DevelopmentConfig")
     elif config_name == "ProductionConfig":
         app.config.from_object("config.ProductionConfig")
+        # Set database URI at runtime for production
+        from config import get_database_uri
+
+        app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
     else:
         raise ValueError("Invalid config name")
 

@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from .extensions import ma, limiter, cache
 from .models import db  # Import the SQLAlchemy instance from models
@@ -23,17 +24,21 @@ def create_app(config_name):
 
     # Load app configuration
     app = Flask(__name__)
-        
+
     if config_name == "TestingConfig":
         app.config.from_object("config.TestingConfig")
     elif config_name == "DevelopmentConfig":
         app.config.from_object("config.DevelopmentConfig")
+    elif config_name == "ProductionConfig":
+        app.config.from_object("config.ProductionConfig")
     else:
         raise ValueError("Invalid config name")
 
-    app.config.from_object(f"config.{config_name}")
-    app.config["RATELIMIT_STORAGE_URL"] = "redis://localhost:6379"
-
+    # Override rate limiter storage for production if Redis URL is available
+    if config_name == "ProductionConfig" and os.environ.get("REDIS_URL"):
+        app.config["RATELIMIT_STORAGE_URL"] = os.environ.get("REDIS_URL")
+    elif config_name != "ProductionConfig":
+        app.config["RATELIMIT_STORAGE_URL"] = "memory://"
 
     # Initialize extensions
     ma.init_app(app)  # Initialize Marshmallow

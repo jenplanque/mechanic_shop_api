@@ -18,24 +18,26 @@ jobs:
           python-version: 3.12
 
       - name: Create virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
+        run: python -m venv venv
 
       - name: Install dependencies
         run: |
+          source venv/bin/activate
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
       - name: Print debugging information
         run: |
+          source venv/bin/activate
           echo "Python Version: $(python --version)"
           echo "Working Directory: $(pwd)"
           echo "Contents of Working Directory: $(ls -l)"
           echo "Contents of site-packages: $(ls -l venv/lib/python*/site-packages)"
 
       - name: Run tests
-        run: python -m unittest discover -s tests -p 'test_*.py'
+        run: |
+          source venv/bin/activate
+          python -m unittest discover -s tests -p 'test_*.py'
 
   test:
     needs: build
@@ -51,17 +53,18 @@ jobs:
           python-version: 3.12 #setting up python on our build environment
 
       - name: Create virtual Environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
+        run: python -m venv venv
 
       - name: Install our Dependecies
         run: |
+          source venv/bin/activate
           python -m pip install --upgrade pip 
           python -m pip install -r requirements.txt
 
       - name: Run test
-        run: python -m unittest discover -s tests -p 'test_*.py'
+        run: |
+          source venv/bin/activate
+          python -m unittest discover -s tests -p 'test_*.py'
 
   deploy:
     needs: test
@@ -77,12 +80,11 @@ jobs:
           python-version: 3.12 #setting up python on our build environment
 
       - name: Create virtual Environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
+        run: python -m venv venv
 
       - name: Install our Dependecies
         run: |
+          source venv/bin/activate
           python -m pip install --upgrade pip 
           python -m pip install -r requirements.txt
 

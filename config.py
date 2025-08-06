@@ -29,9 +29,11 @@ class ProductionConfig:
         or os.environ.get("DATABASE_URL")
         or "sqlite:///production.db"  # Fallback for local testing
     )
-    # Fix postgres:// scheme to postgresql:// for SQLAlchemy compatibility
+    # Fix postgres:// scheme to postgresql+pg8000:// for SQLAlchemy compatibility with pg8000
     if database_url and database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
+        database_url = database_url.replace("postgres://", "postgresql+pg8000://", 1)
+    elif database_url and database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
 
     SQLALCHEMY_DATABASE_URI = database_url
     DEBUG = False

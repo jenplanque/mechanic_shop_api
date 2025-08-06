@@ -22,8 +22,8 @@ class TestingConfig:
     RATELIMIT_STORAGE_URL = "memory://"
 
 
-class ProductionConfig:
-    # Handle Render's DATABASE_URL which might use 'postgres://' instead of 'postgresql://'
+# Helper function to process database URL
+def get_database_uri():
     database_url = (
         os.environ.get("SQLALCHEMY_DATABASE_URI")
         or os.environ.get("DATABASE_URL")
@@ -35,7 +35,11 @@ class ProductionConfig:
     elif database_url and database_url.startswith("postgresql://"):
         database_url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
 
-    SQLALCHEMY_DATABASE_URI = database_url
+    return database_url
+
+
+class ProductionConfig:
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
     DEBUG = False
     TESTING = False
     CACHE_TYPE = "SimpleCache"

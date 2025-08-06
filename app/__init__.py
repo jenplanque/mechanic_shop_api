@@ -61,6 +61,19 @@ def create_app(config_name):
             },
         }
 
+    # Add health check endpoint for Render
+    @app.route("/health")
+    def health_check():
+        try:
+            # Test database connection
+            with app.app_context():
+                from sqlalchemy import text
+
+                db.session.execute(text("SELECT 1"))
+            return {"status": "healthy", "database": "connected"}, 200
+        except Exception as e:
+            return {"status": "unhealthy", "error": str(e)}, 500
+
     # Register blueprints
     app.register_blueprint(customers_bp, url_prefix="/customers")
     app.register_blueprint(mechanics_bp, url_prefix="/mechanics")
